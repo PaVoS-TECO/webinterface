@@ -8,7 +8,7 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
     var GRAPHITE_PORT = '3000';
     var GRAPHITE_BASE_URL = LOCALHOST + ':' + GRAPHITE_PORT + '/d-solo/Vs1Usqpik/';
 
-    var BASE_URL = LOCALHOST + ':' + LOCAL_PORT + '/';
+    var BASE_URL = SERVER_URL + ':' + LOCAL_PORT + '/';
 
     requestGridID = function(callback) {
         this.xmlHttpRequest(

@@ -1,5 +1,5 @@
-define(['grid', 'gridUtil', 'recursiveRectangleCluster', 'bounds', 'dimension', 'mathUtil'],
-function(Grid, GridUtil, RecursiveRectangleCluster, Bounds, Dimension, MathUtil) {
+define(['grid', 'recursiveRectangleCluster', 'bounds', 'dimension', 'mathUtil'],
+function(Grid, RecursiveRectangleCluster, Bounds, Dimension, MathUtil) {
     /**
       * A regular grid, consisting of rectangle clusters with equal size.
       * 
@@ -27,10 +27,10 @@ function(Grid, GridUtil, RecursiveRectangleCluster, Bounds, Dimension, MathUtil)
 
         var rowColumnArray = [];
         for (level = 1; level <= gridLevel; level++) {
-            var clusterDimension = GridUtil.calculateDimensionAtGridLevel(this.getBounds().getDimension(), this.getRows(), this.getColumns(), level);
+            var clusterDimension = this.calculateDimensionAtGridLevel(this.getBounds().getDimension(), this.getRows(), this.getColumns(), level);
             
-            var row = MathUtil.mod(Math.floor(GridUtil.calculateCoordinateRelativeToBounds(this.getBounds(), coordinate)[0] / clusterDimension.getWidth()), this.getRows());
-            var column = MathUtil.mod(Math.floor(GridUtil.calculateCoordinateRelativeToBounds(this.getBounds(), coordinate)[1] / clusterDimension.getHeight()), this.getColumns());
+            var row = MathUtil.mod(Math.floor(this.calculateCoordinateRelativeToBounds(this.getBounds(), coordinate)[0] / clusterDimension.getWidth()), this.getRows());
+            var column = MathUtil.mod(Math.floor(this.calculateCoordinateRelativeToBounds(this.getBounds(), coordinate)[1] / clusterDimension.getHeight()), this.getColumns());
 
             rowColumnArray.push([row, column]);
         }
@@ -76,6 +76,31 @@ function(Grid, GridUtil, RecursiveRectangleCluster, Bounds, Dimension, MathUtil)
       */
     RecursiveRectangleGrid.prototype.getGridID = function() {
         return "recursiveRectangleGrid" + "-" + this.getRows() + "_" + this.getColumns() + "_" + this.getGridLevels();
+    };
+
+    /**
+     * Divides the submitted dimension into equal rectangles using the given rows and columns 
+     * per gridlevel and returns the dimension of the resulting object.
+     * 
+     * @param {*} dimension the dimension
+     * @param {*} rows the rows
+     * @param {*} columns the columns
+     * @param {*} gridLevel the gridLevel
+     */
+    RecursiveRectangleGrid.prototype.calculateDimensionAtGridLevel = function(dimension, rows, columns, gridLevel) {
+        width = (dimension.getWidth()) / Math.pow(rows, gridLevel);
+        height = (dimension.getHeight()) / Math.pow(columns, gridLevel);
+        return new Dimension(width, height);
+    };
+
+    /**
+     * Calculate what the coordinates values would be if the bounds lower left corner was the point (0, 0).
+     * 
+     * @param {*} bounds the bounds
+     * @param {*} coordinate the coordinate
+     */
+    RecursiveRectangleGrid.prototype.calculateCoordinateRelativeToBounds = function(bounds, coordinate) {
+        return [(coordinate[0] - bounds.getLowerLeft()[0]), (coordinate[1] - bounds.getLowerLeft()[1])];
     };
 
     /**

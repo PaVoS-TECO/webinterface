@@ -1,4 +1,4 @@
-define(['requestor'], function(Requestor) {
+define(['requestor', 'parser'], function(Requestor, Parser) {
     function ExportFormatFetchRoutine(callback) {
         this.callback = callback;
     };
@@ -10,7 +10,7 @@ define(['requestor'], function(Requestor) {
 
     ExportFormatFetchRoutine.prototype.handleExportFormatRequest = function(response) {
         console.log("STOP ExportFormatFetchRoutine");
-        this.callback(response.split(','));
+        this.callback(Parser.separatedToArray(response, ','));
     };
 
     return ExportFormatFetchRoutine;

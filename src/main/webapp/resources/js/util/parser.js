@@ -6,6 +6,8 @@ define(function() {
             for (i = 0; i < array.length; i++) {
                 output.push(array[i]);
             }
+        } else {
+            console.error("input is " + undefined);
         }
         return output;
     }
@@ -15,7 +17,7 @@ define(function() {
         try {
             output = JSON.parse(input);
         } catch {
-            throw new Error(input + " isn't valid json");
+            console.error(input + " isn't valid json");
         }
         return output;
     }
@@ -25,13 +27,13 @@ define(function() {
         try {
             output = JSON.parse(input);
         } catch {
-            throw new Error(input + " isn't valid json")
+            console.error(input + " isn't valid json")
         }
         return output;
     }
 
     return {
-        commaSeparatedToArray,
+        separatedToArray,
         arrayStringToArray,
         jsonStringToObject
     }

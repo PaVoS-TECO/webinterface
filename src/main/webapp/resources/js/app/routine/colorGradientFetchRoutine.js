@@ -1,4 +1,4 @@
-define(['requestor'], function(Requestor) {
+define(['requestor', 'parser'], function(Requestor, Parser) {
     function ColorGradientFetchRoutine(callback) {
         this.callback = callback;
     };
@@ -10,7 +10,7 @@ define(['requestor'], function(Requestor) {
 
     ColorGradientFetchRoutine.prototype.handleColorGradientsRequest = function(response) {
         console.log("STOP ColorGradientFetchRoutine");
-        this.callback(JSON.parse(response));
+        this.callback(Parser.jsonStringToObject(response));
     }
 
     return ColorGradientFetchRoutine;
