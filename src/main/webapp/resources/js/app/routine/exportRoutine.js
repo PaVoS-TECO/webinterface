@@ -24,7 +24,8 @@ define(['requestor', 'util'], function(Requestor, Util) {
     };
 
     ExportRoutine.prototype.handleExportRequest = function(response) {
-        if (Util.replaceAll(response, '\n', '') == 'started') {
+        if ((Util.replaceAll(response, '\n', '') == 'started')
+            || (Util.replaceAll(response, '\n', '') == 'duplicate')) {
             Requestor.requestExportStatus(this.extension,
                                           this.timeframe, 
                                           this.observedProperties, 

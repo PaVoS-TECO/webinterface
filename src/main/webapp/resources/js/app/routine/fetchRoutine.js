@@ -1,30 +1,46 @@
-define(['appManager', 'mapManager', 'clusterGeoJsonFetchRoutine'], function(AppManager, MapManager, ClusterGeoJsonFetchRoutine) {
+define(['appManager', 'mapManager', 'liveClusterGeoJsonFetchRoutine', 'historicalClusterGeoJsonFetchRoutine', 'parser'], 
+function(AppManager, MapManager, LiveClusterGeoJsonFetchRoutine, HistoricalClusterGeoJsonFetchRoutine, Parser) {
     var timer = null;
+    var running = false;
 
     run = function() {
-        var clusterGeoJsonFetchRoutine = 
-            new ClusterGeoJsonFetchRoutine(
-                AppManager.GRID.getGridID(),
-                AppManager.APP_STATE.getSelectedClusters(),
-                AppManager.APP_STATE.getSelectedSensortype(),
-                AppManager.APP_STATE.getSelectedTimeframe(),
-                AppManager.APP_STATE.HISTORICAL_SNAPSHOT_AMOUNT,
-                this.handleFetchRequest
-            );
+        console.log("FetchRoutine.running = " + running);
+        if (!running) {
+            running = true;
+            var clusterGeoJsonFetchRoutine
 
-        clusterGeoJsonFetchRoutine.run();
+            if (AppManager.LIVE_MODE_ENABLED) {
+                clusterGeoJsonFetchRoutine =
+                    new LiveClusterGeoJsonFetchRoutine(
+                        AppManager.GRID.getGridID(),
+                        AppManager.GRID.getClustersContainedInBounds(AppManager.BOUNDS, AppManager.GRID_LEVEL),
+                        AppManager.APP_STATE.getSelectedSensortype(),
+                        handleFetchResponse
+                    );
+            } else {
+                clusterGeoJsonFetchRoutine = 
+                    new HistoricalClusterGeoJsonFetchRoutine(
+                        AppManager.GRID.getGridID(),
+                        AppManager.GRID.getClustersContainedInBounds(AppManager.BOUNDS, AppManager.GRID_LEVEL),
+                        AppManager.APP_STATE.getSelectedSensortype(),
+                        AppManager.APP_STATE.getSelectedTimeframe(),
+                        AppManager.HISTORICAL_SNAPSHOT_AMOUNT,
+                        handleFetchResponse
+                    );
+            }
+
+            console.log("START FetchRoutine");
+            clusterGeoJsonFetchRoutine.run();
+        }
     };
 
-    handleFetchRequest = function(response) {
-        console.log("Received response " + response);
+    handleFetchResponse = function(response) {
+        console.log("STOP Fetchroutine");
 
-        if (AppManager.LIVE_MODE_ENABLED) {
-            MapManager.updateLayerArray([JSON.parse(response)]);
-            MapManager.displayLayer(0);
-        } else {
-            MapManager.updateLayerArray(JSON.parse(response));
-            MapManager.displayLayer(0);
-        }
+        MapManager.updateLayerArray(response);
+        MapManager.displayLayer(0);
+
+        running = false;
     };
 
     start = function() {

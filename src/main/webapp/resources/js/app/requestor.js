@@ -1,19 +1,22 @@
 define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function($, AppManager, Util, GridUtil) {
-    var SERVER_URL = 'http://pavos.oliver.pw';
-    var PORT       = '8084';
+    var EDMS_URL    = AppManager.SERVER_URL + ':' + AppManager.EDMS_PORT + '/';
+    var CORE_URL    = AppManager.SERVER_URL + ':' + AppManager.CORE_PORT + '/';
+    var GRAFANA_URL = AppManager.SERVER_URL + ':' + AppManager.GRAFANA_PORT + '/';
 
-    var LOCALHOST = 'http://localhost';
-    var LOCAL_PORT = '7700';
-
-    var GRAPHITE_PORT = '3000';
-    var GRAPHITE_BASE_URL = LOCALHOST + ':' + GRAPHITE_PORT + '/d-solo/Vs1Usqpik/';
-
-    var BASE_URL = SERVER_URL + ':' + LOCAL_PORT + '/';
+    requestGridBounds = function(callback) {
+        this.xmlHttpRequest(
+            "GET",
+            (CORE_URL
+                + 'getGridBounds?'),
+            true,
+            callback
+        );
+    };
 
     requestGridID = function(callback) {
         this.xmlHttpRequest(
             "GET",
-            (BASE_URL
+            (CORE_URL
                 + 'getGridID?'),
             true,
             callback);
@@ -22,7 +25,7 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
     requestSensortypes = function(gridID, callback) {
         this.xmlHttpRequest(
             "GET",
-            (BASE_URL
+            (CORE_URL
                 + 'getObservationTypes?'
                 + this.formatParameters(['gridID'],
                                         [gridID])),
@@ -33,19 +36,44 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
     requestColorGradients = function(callback) {
         this.xmlHttpRequest(
             "GET",
-            (BASE_URL
+            (CORE_URL
                 + 'getAllGradients?'),
             true,
             callback);
     };
 
-    requestClusterGeoJson = function(gridID, clusterID, property, time, steps, callback) {
+    requestLiveClusterGeoJson = function(gridID, clusterArray, property, callback) {
+        var valueArray = [
+            gridID, 
+            Util.concat(GridUtil.clusterArrayToStringArray(clusterArray), ','),
+            property
+        ]
+
         this.xmlHttpRequest(
             "GET",
-            (BASE_URL
+            (CORE_URL
+                + 'getGeoJsonCluster?'
+                + this.formatParameters(['gridID', 'clusterID', 'property'],
+                                        valueArray)),
+            true,
+            callback);
+    };
+
+    requestHistoricalClusterGeoJson = function(gridID, clusterArray, property, utcDateTimeArray, steps, callback) {
+        var valueArray = [
+            gridID, 
+            Util.concat(GridUtil.clusterArrayToStringArray(clusterArray), ','),
+            property,
+            Util.concat(utcDateTimeArray, ','),
+            steps
+        ]
+
+        this.xmlHttpRequest(
+            "GET",
+            (CORE_URL
                 + 'getGeoJsonCluster?'
                 + this.formatParameters(['gridID', 'clusterID', 'property', 'time', 'steps'],
-                                        [gridID, clusterID, property, time, steps])),
+                                        valueArray)),
             true,
             callback);
     };
@@ -53,7 +81,7 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
     requestSensorGeoJson = function(gridID, sensorID, property, callback) {
         this.xmlHttpRequest(
             "GET",
-            (BASE_URL
+            (CORE_URL
                 + 'getGeoJsonSensor?'
                 + this.formatParameters(['gridID', 'sensorID', 'property'],
                                         [gridID, sensorID, property])),
@@ -64,7 +92,7 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
     requestSensorReport = function(sensorID, reason, callback) {
         this.xmlHttpRequest(
             "GET",
-            (BASE_URL
+            (CORE_URL
                 + 'reportSensor?'
                 + this.formatParameters(['sensorID', 'reason'],
                                         [sensorID, reason])),
@@ -81,7 +109,7 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
         }
 
         if (live) {
-            AppManager.GRAPHITE_URL = GRAPHITE_BASE_URL
+            AppManager.GRAFANA_URL = GRAFANA_URL
                 + 'main?'
                 + this.formatParameters(['orgId', 'from', 'to', 'var-GridID'], [1, 'now/d', 'now', gridID]);
                 + '&'
@@ -93,7 +121,7 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
             var formatFrom = Util.replaceAll(from.toString(), ['-', 'T', ':', 'Z'], ['', '', '', '']);
             var formatTo   = Util.replaceAll(to.toString(), ['-', 'T', ':', 'Z'], ['', '', '', '']);
 
-            AppManager.GRAPHITE_URL = GRAPHITE_BASE_URL
+            AppManager.GRAFANA_URL = GRAFANA_URL
                 + 'main?'
                 + this.formatParameters(['orgId', 'from', 'to', 'var-GridID'], [1, formatFrom, formatTo, gridID]);
                 + '&'
@@ -106,15 +134,15 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
     requestExportFormats = function(callback) {
         this.xmlHttpRequest(
             "GET",
-            (SERVER_URL + ':' + PORT + '/'
+            (EDMS_URL
                 + 'edms/get?requestType=getExtensions'),
             true,
             callback);
     };
 
     requestExport = function(extension, timeframe, observedProperty, clusters, callback) {
-        // var downloadID = Util.getHashCode(extension + timeframe + observedProperties + clusters);
-        var downloadID = 'froststealer';
+        var downloadID = Util.getHashCode(extension + timeframe + observedProperty + clusters);
+       
         var array = [downloadID,
                      extension, 
                      Util.concat([timeframe[0].toString(), timeframe[1].toString()], ','),
@@ -123,7 +151,7 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
 
         this.xmlHttpRequest(
             "GET",
-            (SERVER_URL + ':' + PORT + '/'
+            (EDMS_URL
                 + 'edms/get?requestType=newExport&'
                 + this.formatParameters(['downloadID', 'extension', 'timeFrame', 'observedProperties', 'clusters'],
                                         array)),
@@ -131,13 +159,12 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
             callback);
     };
 
-    requestExportStatus = function(extension, timeframe, observedProperties, clusters, callback) {
-        // var downloadID = Util.getHashCode(extension + timeframe + observedProperties + clusters);
-        var downloadID = 'froststealer';
+    requestExportStatus = function(extension, timeframe, observedProperty, clusters, callback) {
+        var downloadID = Util.getHashCode(extension + timeframe + observedProperty + clusters);
 
         this.xmlHttpRequest(
             "GET",
-            (SERVER_URL + ':' + PORT + '/'
+            (EDMS_URL
                 + 'edms/get?requestType=getStatus'
                 + '&downloadID='
                 + downloadID),
@@ -145,12 +172,11 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
             callback);
     };
 
-    requestDownload = function(extension, timeframe, observedProperties, clusters) {
-        // var downloadID = Util.getHashCode(extension + timeframe + observedProperties + clusters);
-        var downloadID = 'froststealer';
+    requestDownload = function(extension, timeframe, observedProperty, clusters) {
+        var downloadID = Util.getHashCode(extension + timeframe + observedProperty + clusters);
 
         var requestUrl =
-            (SERVER_URL + ':' + PORT + '/'
+            (EDMS_URL
             + 'edms/get?requestType=tryDownload'
             + '&downloadID='
             + downloadID);
@@ -161,7 +187,7 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
 
         var _this = this;
         xmlHttp.onload = function () {
-            _this.saveData(this.response, (downloadID + '.' + extension));
+            _this.saveData(this.response, (downloadID + '.' + AppManager.DOWNLOAD_FORMAT));
         };
         xmlHttp.timeout = AppManager.HTTP_REQUEST_TIMEOUT;
         xmlHttp.ontimeout = function() {
@@ -179,6 +205,7 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
         var xmlHttp = new XMLHttpRequest();
         xmlHttp.onreadystatechange = function() {
             if ((xmlHttp.readyState == 4) && (xmlHttp.status === 200)) {
+                console.log("XMLHttpRequest Success >>> " + url + " >>> " + xmlHttp.responseText);
                 callback(xmlHttp.responseText);
             }
         }
@@ -186,12 +213,12 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
         xmlHttp.timeout = AppManager.HTTP_REQUEST_TIMEOUT;
         xmlHttp.ontimeout = function() {
             xmlHttp.abort;
-            console.log("XMLHttpRequest Timeout >>> " + url);
+            console.error("XMLHttpRequest Timeout >>> " + url);
             callback();
         }
         xmlHttp.onerror = function() {
             xmlHttp.abort;
-            console.log("XMLHttpRequest Error  >>> " + url);
+            console.error("XMLHttpRequest Error >>> " + url);
             callback();
         }
         xmlHttp.send();
@@ -240,10 +267,12 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
     };
 
     return {
+        requestGridBounds,
         requestGridID,
         requestSensortypes,
         requestColorGradients,
-        requestClusterGeoJson,
+        requestLiveClusterGeoJson,
+        requestHistoricalClusterGeoJson,
         requestSensorGeoJson,
         requestSensorReport,
         requestGraph,

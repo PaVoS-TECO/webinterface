@@ -1,7 +1,7 @@
 define(['requestor'], function(Requestor) {
     function GridIDFetchRoutine(callback) {
         this.callback = callback;
-    }
+    };
 
     GridIDFetchRoutine.prototype.run = function() {
         Requestor.requestGridID(this.handleGridIDRequest.bind(this));

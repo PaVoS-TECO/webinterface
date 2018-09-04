@@ -17,6 +17,8 @@ define(['dimension', 'recursiveRectangleGrid'], function(Dimension, RecursiveRec
         gridType = gridID.split('-')[0];
         gridParameters = gridID.split('-')[1].split('_');
 
+        console.log("bounds = " + bounds);
+
         if (gridType == 'recursiveRectangleGrid') {
             return new RecursiveRectangleGrid(bounds, gridParameters[0], gridParameters[1], gridParameters[2]);
         }

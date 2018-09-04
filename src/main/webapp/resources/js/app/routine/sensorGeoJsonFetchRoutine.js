@@ -1,8 +1,9 @@
-define(['requestor'], function(Requestor) {
-    function SensorGeoJsonFetchRoutine(gridID, clusterID, property) {
+define(['requestor', 'parser'], function(Requestor, Parser) {
+    function SensorGeoJsonFetchRoutine(gridID, clusterID, property, callback) {
         this.gridID = gridID; 
         this.clusterID = clusterID; 
         this.property = property;
+        this.callback = callback;
     };
 
     SensorGeoJsonFetchRoutine.prototype.run = function() {
@@ -10,10 +11,12 @@ define(['requestor'], function(Requestor) {
                                        this.clusterID, 
                                        this.property,
                                        this.handleSensorGeoJsonRequest.bind(this));
+        console.log("START SensorGeoJsonFetchRoutine");
     };
 
     SensorGeoJsonFetchRoutine.prototype.handleSensorGeoJsonRequest = function(response) {
-        console.log(response);
+        console.log("STOP SensorGeoJsonFetchRoutine");
+        this.callback(Parser.jsonStringToObject(response));
     };
 
     return SensorGeoJsonFetchRoutine;

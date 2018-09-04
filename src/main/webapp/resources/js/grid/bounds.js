@@ -7,15 +7,18 @@ define(['dimension'], function(Dimension) {
       * @param {*} point2 the second point
       */
     function Bounds(point1, point2) {
-        var x1 = point1[0];
-        var y1 = point1[1];
-        var x2 = point2[0];
-        var y2 = point2[1];
+        if (((point1 != null) && (point1 != undefined))
+            && ((point2 != null) && (point2 != undefined))) {
+            var x1 = point1[0];
+            var y1 = point1[1];
+            var x2 = point2[0];
+            var y2 = point2[1];
 
-        this.minX = Math.min(x1, x2);
-        this.maxX = Math.max(x1, x2);
-        this.minY = Math.min(y1, y2);
-        this.maxY = Math.max(y1, y2);
+            this.minX = Math.min(x1, x2);
+            this.maxX = Math.max(x1, x2);
+            this.minY = Math.min(y1, y2);
+            this.maxY = Math.max(y1, y2);
+        }
     }
 
     /**
@@ -48,6 +51,18 @@ define(['dimension'], function(Dimension) {
       */
     Bounds.prototype.getDimension = function() {
         return new Dimension((this.maxX - this.minX), (this.maxY - this.minY));
+    }
+
+    /**
+      * Parses and sets this bounds instance to the submitted leaflet bounds.
+      * 
+      * @param {*} bounds the leaflet map bounds
+      */
+    Bounds.prototype.parseLeafletMapBounds = function(bounds) {
+        this.minX = bounds.getSouthWest().lng;
+        this.minY = bounds.getSouthWest().lat;
+        this.maxX = bounds.getNorthEast().lng;
+        this.maxY = bounds.getNorthEast().lat;
     }
 
     return Bounds;

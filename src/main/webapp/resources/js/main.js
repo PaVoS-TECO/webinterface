@@ -26,12 +26,14 @@ require.config({
         'fetchRoutine': '../../resources/js/app/routine/fetchRoutine',
         'exportRoutine': '../../resources/js/app/routine/exportRoutine',
         'exportFormatFetchRoutine': '../../resources/js/app/routine/exportFormatFetchRoutine',
-        'clusterGeoJsonFetchRoutine': '../../resources/js/app/routine/clusterGeoJsonFetchRoutine',
+        'liveClusterGeoJsonFetchRoutine': '../../resources/js/app/routine/liveClusterGeoJsonFetchRoutine',
+        'historicalClusterGeoJsonFetchRoutine': '../../resources/js/app/routine/historicalClusterGeoJsonFetchRoutine',
         'colorGradientFetchRoutine': '../../resources/js/app/routine/colorGradientFetchRoutine',
         'sensorGeoJsonFetchRoutine': '../../resources/js/app/routine/sensorGeoJsonFetchRoutine',
         'sensorReportRoutine': '../../resources/js/app/routine/sensorReportRoutine',
         'sensorTypeFetchRoutine': '../../resources/js/app/routine/sensorTypeFetchRoutine',
         'gridIDFetchRoutine': '../../resources/js/app/routine/gridIDFetchRoutine',
+        'gridBoundsFetchRoutine': '../../resources/js/app/routine/gridBoundsFetchRoutine',
 
         'grid': '../../resources/js/grid/grid',
         'recursiveRectangleGrid': '../../resources/js/grid/recursiveRectangleGrid',
@@ -49,6 +51,7 @@ require.config({
         'dynamicHtmlBuilder': '../../resources/js/util/dynamicHtmlBuilder',
         'utcDateTime': '../../resources/js/util/utcDateTime',
         'leafletUtil': '../../resources/js/util/leafletUtil',
+        'leafletMapDemo': '../../resources/js/util/leafletMapDemo',
         'geoJsonUtil': '../../resources/js/util/geoJsonUtil',
         'gridUtil': '../../resources/js/util/gridUtil',
         'storageUtil': '../../resources/js/util/storageUtil',
@@ -90,12 +93,11 @@ require(['app',
          'jquery', 
          'bootstrap', 'bootstrapDatetimepicker', 'bootstrapTouchspin', 
          'leaflet', 'leafletFullscreen', 'leafletCoordinates', 
-         'fontAwesome', 'fontAwesomeSolid', 
+       //'fontAwesome', 'fontAwesomeSolid', 
          'loadingOverlay'], 
          function(App) {
 
     var app = new App();
-
     app.run();
 
 });

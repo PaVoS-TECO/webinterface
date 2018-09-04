@@ -1,24 +1,26 @@
 define(["appState", "color", "multiColorGradient", "bounds", "recursiveRectangleGrid", "utcDateTime"], function(AppState, Color, MultiColorGradient, Bounds, RecursiveRectangleGrid, UTCDateTime) {
+    var SERVER_URL = 'http://pavos.oliver.pw';
+    var EDMS_PORT    = '8084';
+    var CORE_PORT    = '7700';
+    var GRAFANA_PORT = '3000';
+    
     // Latitude - Longitude
     var KARLSRUHE = [49.007, 8.404];
     var KARLSRUHE_TECO = [49.013, 8.424];
 
     var LEAFLET_MAP_CONTAINER = "mapContainer";
     var BASEMAP_URL = "http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png";
-
     var BASEMAP_ATTRIBUTION = { attribution: "Positron", minZoom: 2, maxZoom: 15 };
     var INITIAL_COORDINATES = KARLSRUHE;
     var INITIAL_ZOOMLEVEL = 10;
     var IS_FULLSCREEN_AVAILABLE = true;
     var IS_MOUSE_COORDINATES_VISIBLE = true;
 
-    var AVAILABLE_SENSORTYPES = ["temperature_celsius", "pollution", "airpressure", "waterflow", "blub", "blab"];
-    var AVAILABLE_EXPORTFORMATS = ["NetCDF", "CSV"];
-    var AVAILABLE_REFRESH_STATES = ["Automatic", "Manual"];
     var MAP = null;
     var MAP_BOUNDS = new Bounds([-85.0, -180.0], [85.0, 180.0]);
     var GRID = new RecursiveRectangleGrid(MAP_BOUNDS, 2, 2, 3);
-    var BOUNDS = [[0, 0], [10, 10]];
+    var GRID_LEVEL = 1;
+    var BOUNDS = new Bounds([0, 0], [10, 10]);
     var CONTENT_TABLE = [
                          [
                           "id", "temperature_celsius"
@@ -43,10 +45,10 @@ define(["appState", "color", "multiColorGradient", "bounds", "recursiveRectangle
     var GEOJSON_ARRAY = [];
     var HISTORICAL_SNAPSHOT_AMOUNT = 20;
     var LIVE_MODE_ENABLED = false;
-    var BOUNDS = null;
     var GRID_LEVEL = 1;
-    var SENSORTYPES_ARRAY;
-    var EXPORTFORMATS_ARRAY;
+    var SENSORTYPES_ARRAY = ["temperature_celsius", "pollution", "airpressure", "waterflow", "blub", "blab"];
+    var EXPORTFORMATS_ARRAY = ["NetCDF", "CSV"];
+    var REFRESH_STATES_ARRAY = ["Automatic", "Manual"];
     var COLOR_GRADIENTS = {
         "temperature_celsius": new MultiColorGradient([new Color("#0000ff"), new Color("#00ff00"), new Color("#ff0000")])
     };
@@ -59,8 +61,15 @@ define(["appState", "color", "multiColorGradient", "bounds", "recursiveRectangle
     var EXPORT_TIMEOUT = 10000;
     var EXPORT_STATUS_TIMEOUT = 500;
     var HTTP_REQUEST_TIMEOUT = 5000;
+    var GRAFANA_URL;
+    var DOWNLOAD_FORMAT = "zip";
     
     return {
+        SERVER_URL,
+        EDMS_PORT,
+        CORE_PORT,
+        GRAFANA_PORT,
+
         KARLSRUHE,
         KARLSRUHE_TECO,
         LEAFLET_MAP_CONTAINER,
@@ -71,22 +80,22 @@ define(["appState", "color", "multiColorGradient", "bounds", "recursiveRectangle
         IS_FULLSCREEN_AVAILABLE,
         IS_MOUSE_COORDINATES_VISIBLE,
 
-        AVAILABLE_SENSORTYPES,
-        AVAILABLE_EXPORTFORMATS,
-        AVAILABLE_REFRESH_STATES,
         MAP,
         MAP_BOUNDS,
         GRID,
+        GRID_LEVEL,
         BOUNDS,
         CONTENT_TABLE,
         APP_STATE,
         GEOJSON_ARRAY,
         HISTORICAL_SNAPSHOT_AMOUNT,
         LIVE_MODE_ENABLED,
-        BOUNDS,
         GRID_LEVEL,
+
         SENSORTYPES_ARRAY,
         EXPORTFORMATS_ARRAY,
+        REFRESH_STATES_ARRAY,
+
         COLOR_GRADIENTS,
         COLOR_GRADIENTS_RANGE,
         FILL_COLOR_OPACITY,
@@ -94,6 +103,8 @@ define(["appState", "color", "multiColorGradient", "bounds", "recursiveRectangle
         BORDER_WEIGHT,
         EXPORT_TIMEOUT,
         EXPORT_STATUS_TIMEOUT,
-        HTTP_REQUEST_TIMEOUT
+        HTTP_REQUEST_TIMEOUT,
+        GRAFANA_URL,
+        DOWNLOAD_FORMAT
     }
 });

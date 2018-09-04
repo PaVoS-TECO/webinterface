@@ -1,6 +1,10 @@
-define(['jquery', 'app', 'appState', 'appManager', 'fetchRoutine', 'exportRoutine', 'recursiveRectangleGrid','recursiveRectangleCluster', 'bounds', 'dynamicHtmlBuilder', 'utcDateTime', 'leafletUtil', 'geoJsonUtil', 'storageUtil', 'requestor', 'mapManager',
+define(['jquery', 'app', 'appState', 'appManager', 'fetchRoutine', 'exportRoutine',
+        'recursiveRectangleGrid','recursiveRectangleCluster', 'bounds', 'dynamicHtmlBuilder', 
+        'utcDateTime', 'leafletUtil', 'geoJsonUtil', 'storageUtil', 'requestor', 'mapManager',
         'leaflet', 'bootstrapDatetimepicker', 'bootstrapTouchspin'],
-function($, App, AppState, AppManager, FetchRoutine, ExportRoutine, RecursiveRectangleGrid, RecursiveRectangleCluster, Bounds, DynamicHtmlBuilder, UTCDateTime, LeafletUtil, GeoJsonUtil, StorageUtil, Requestor, MapManager) {
+function($, App, AppState, AppManager, FetchRoutine, ExportRoutine, RecursiveRectangleGrid, 
+         RecursiveRectangleCluster, Bounds, DynamicHtmlBuilder, UTCDateTime, LeafletUtil, 
+         GeoJsonUtil, StorageUtil, Requestor, MapManager) {
     var exportModalTemp;
     var favoritesModalTemp;
     var addFavoritesModalTemp;
@@ -37,26 +41,40 @@ function($, App, AppState, AppManager, FetchRoutine, ExportRoutine, RecursiveRec
                 AppManager.INITIAL_COORDINATES, AppManager.INITIAL_ZOOMLEVEL,
                 AppManager.IS_FULLSCREEN_AVAILABLE, AppManager.IS_MOUSE_COORDINATES_VISIBLE);
 
-            AppManager.MAP.on("moveend", function () {
-                var leafletMapBounds = AppManager.MAP.getBounds();
-                // console.log(AppManager.GRID.getClustersContainedInBounds(new Bounds([leafletMapBounds._southWest.lat, leafletMapBounds._southWest.lng],
-                //                                                          [leafletMapBounds._northEast.lat, leafletMapBounds._northEast.lng]), 
-                //                                                          LeafletUtil.calculateGridLevel(AppManager.MAP.getZoom())));
-            });
+            LeafletUtil.initializeLeafletMap(
+                AppManager.MAP, 
+                function() {
+                    var bounds = new Bounds();
+                    bounds.parseLeafletMapBounds(AppManager.MAP.getBounds());
+                    AppManager.BOUNDS = bounds;
+                    // console.log(AppManager.BOUNDS);
+                }, 
+                function() {
+                    var bounds = new Bounds();
+                    AppManager.BOUNDS = bounds.parseLeafletMapBounds(AppManager.MAP.getBounds());
+                    // console.log(AppManager.BOUNDS);
+                }
+            );
+            // AppManager.MAP.on("moveend", function () {
+            //     AppManager.BOUNDS = AppManager.MAP.getBounds();
+            //     // console.log(AppManager.GRID.getClustersContainedInBounds(new Bounds([leafletMapBounds._southWest.lat, leafletMapBounds._southWest.lng],
+            //     //                                                          [leafletMapBounds._northEast.lat, leafletMapBounds._northEast.lng]), 
+            //     //                                                          LeafletUtil.calculateGridLevel(AppManager.MAP.getZoom())));
+            // });
 
-            AppManager.MAP.on("zoomend", function () {
-                var leafletMapBounds = AppManager.MAP.getBounds();
-                // console.log(AppManager.GRID.getClustersContainedInBounds(new Bounds([leafletMapBounds._southWest.lat, leafletMapBounds._southWest.lng],
-                //                                                          [leafletMapBounds._northEast.lat, leafletMapBounds._northEast.lng]), 
-                //                                                          LeafletUtil.calculateGridLevel(AppManager.MAP.getZoom())));
-            });
+            // AppManager.MAP.on("zoomend", function () {
+            //     AppManager.BOUNDS = AppManager.MAP.getBounds();
+            //     // console.log(AppManager.GRID.getClustersContainedInBounds(new Bounds([leafletMapBounds._southWest.lat, leafletMapBounds._southWest.lng],
+            //     //                                                          [leafletMapBounds._northEast.lat, leafletMapBounds._northEast.lng]), 
+            //     //                                                          LeafletUtil.calculateGridLevel(AppManager.MAP.getZoom())));
+            // });
 
-            // LeafletUtil.initializeGrid(AppManager.MAP);
+            // LeafletUtil.initializeGridDemo(AppManager.MAP);
         },
 
         initExportModal: function() {
-            DynamicHtmlBuilder.buildRadioButtonGroup('#exportModalSensorTypeRadioButtons', 'exportModalSensorTypeRadioButtons', AppManager.AVAILABLE_SENSORTYPES, 'temperature_celsius');
-            DynamicHtmlBuilder.buildRadioButtonGroup('#exportModalExportFormatRadioButtons', 'exportModalExportFormatRadioButtons', AppManager.AVAILABLE_EXPORTFORMATS, 'CSV');
+            DynamicHtmlBuilder.buildRadioButtonGroup('#exportModalSensorTypeRadioButtons', 'exportModalSensorTypeRadioButtons', AppManager.SENSORTYPES_ARRAY, 'temperature_celsius');
+            DynamicHtmlBuilder.buildRadioButtonGroup('#exportModalExportFormatRadioButtons', 'exportModalExportFormatRadioButtons', AppManager.EXPORTFORMATS_ARRAY, 'CSV');
 
             // Adding Z (-> symbolizes +00:00) at the end of the format doesn't work yet
             $('#exportFrom-datetimepicker').datetimepicker({
@@ -92,10 +110,10 @@ function($, App, AppState, AppManager, FetchRoutine, ExportRoutine, RecursiveRec
             });
 
             $('#exportModalselectedClustersDropdownInBounds').click(function() {
-                var leafletMapBounds = leafletMap.getBounds();
+                var leafletMapBounds = AppManager.MAP.getBounds();
                 var bounds = new Bounds([leafletMapBounds._southWest.lat, leafletMapBounds._southWest.lng],
                                         [leafletMapBounds._northEast.lat, leafletMapBounds._northEast.lng]);
-                var gridLevel = LeafletUtil.calculateGridLevel(leafletMap.getZoom());
+                var gridLevel = LeafletUtil.calculateGridLevel(AppManager.MAP.getZoom());
 
                 $('#selectedClusters-inputForm').val(JSON.stringify(AppManager.GRID.getClustersContainedInBounds(bounds, gridLevel)));
                 $('#selectedClusters-inputForm').trigger('change');
@@ -161,7 +179,7 @@ function($, App, AppState, AppManager, FetchRoutine, ExportRoutine, RecursiveRec
         },
 
         initSensortypeModal: function() {
-            DynamicHtmlBuilder.buildRadioButtonGroup('#sensorTypeModalRadioButtons', 'sensorTypeModalSensorTypeRadioButtons', AppManager.AVAILABLE_SENSORTYPES, 'temperature_celsius');
+            DynamicHtmlBuilder.buildRadioButtonGroup('#sensorTypeModalRadioButtons', 'sensorTypeModalSensorTypeRadioButtons', AppManager.SENSORTYPES_ARRAY, 'temperature_celsius');
 
             $('#sensortypeModal').on('shown.bs.modal', function(){
                 sensortypeModalTemp.setSelectedSensortype(AppManager.APP_STATE.getSelectedSensortype());
@@ -299,13 +317,13 @@ function($, App, AppState, AppManager, FetchRoutine, ExportRoutine, RecursiveRec
              * mode and live mode.
              */
             $('#liveHistoricalButton').click(function () {
-                startStopChecked = $('input', this).is(':checked');
+                AppManager.LIVE_MODE_ENABLED = !($('input', this).is(':checked'));
                 $('span', this).toggleClass('glyphicon-hourglass glyphicon-repeat');
             });
         },
 
         initTimeSettingsModal: function() {
-            DynamicHtmlBuilder.buildRadioButtonGroup('#timeSettingsAutomaticManualRefreshRadioButtons', 'timeSettingsAutomaticManualRefreshRadioButtons', AppManager.AVAILABLE_REFRESH_STATES, 'Automatic');
+            DynamicHtmlBuilder.buildRadioButtonGroup('#timeSettingsAutomaticManualRefreshRadioButtons', 'timeSettingsAutomaticManualRefreshRadioButtons', AppManager.REFRESH_STATES_ARRAY, 'Automatic');
 
             // Adding Z (-> symbolizes +00:00) at the end of the format doesn't work yet
             $('#timeSettingsFrom-datetimepicker').datetimepicker({

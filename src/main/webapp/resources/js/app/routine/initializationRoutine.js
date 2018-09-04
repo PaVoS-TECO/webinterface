@@ -1,6 +1,10 @@
-define(['jquery', 'appManager', 'initializer', 'gridIDFetchRoutine', 'exportFormatFetchRoutine', 'sensorTypeFetchRoutine', 'colorGradientFetchRoutine', 'grid', 'gridUtil'],
-function($, AppManager, Initializer, GridIDFetchRoutine, ExportFormatFetchRoutine, SensorTypeFetchRoutine, ColorGradientFetchRoutine, Grid, GridUtil) {
+define(['jquery', 'appManager', 'initializer', 'gridBoundsFetchRoutine', 'gridIDFetchRoutine',
+        'exportFormatFetchRoutine', 'sensorTypeFetchRoutine', 'colorGradientFetchRoutine', 'grid', 
+        'gridUtil', 'bounds', 'parser'],
+function($, AppManager, Initializer, GridBoundsFetchRoutine, GridIDFetchRoutine, ExportFormatFetchRoutine, 
+         SensorTypeFetchRoutine, ColorGradientFetchRoutine, Grid, GridUtil, Bounds, Parser) {
     function InitializationRoutine(callback) {
+        this.gridBoundsFetched = false;
         this.gridIDFetched = false;
         this.exportFormatFetched = false;
         this.sensorTypeFetched = false;
@@ -10,13 +14,24 @@ function($, AppManager, Initializer, GridIDFetchRoutine, ExportFormatFetchRoutin
 
     InitializationRoutine.prototype.run = function() {
         console.log("START InitializationRoutine");
-        var gridIDRoutine = new GridIDFetchRoutine(this.gridIDFetchNotify.bind(this));
-        gridIDRoutine.run();
+
+        var gridBoundsRoutine = new GridBoundsFetchRoutine(this.gridBoundsFetchNotify.bind(this));
+        gridBoundsRoutine.run();
         var exportFormatRoutine  = new ExportFormatFetchRoutine(this.exportFormatFetchNotify.bind(this));
         exportFormatRoutine.run();
         var colorGradientRoutine = new ColorGradientFetchRoutine(this.colorGradientFetchNotify.bind(this));
         colorGradientRoutine.run();
     };
+
+    InitializationRoutine.prototype.gridBoundsFetchNotify = function(gridBounds) {
+        if (gridBounds != null) {
+            AppManager.MAP_BOUNDS = gridBounds;
+        }
+        this.gridBoundsFetched = true;
+
+        var gridIDRoutine = new GridIDFetchRoutine(this.gridIDFetchNotify.bind(this));
+        gridIDRoutine.run();
+    }
 
     InitializationRoutine.prototype.gridIDFetchNotify = function(gridID) {
         if (gridID != null) {
@@ -43,14 +58,16 @@ function($, AppManager, Initializer, GridIDFetchRoutine, ExportFormatFetchRoutin
     };
 
     InitializationRoutine.prototype.colorGradientFetchNotify = function(colorGradientJson) {
-        console.log(colorGradientJson);
+        AppManager.COLOR_GRADIENTS = Parser.colorGradientRangeJsonToGradientJson(colorGradientJson);
+        AppManager.COLOR_GRADIENTS_RANGE = Parser.colorGradientRangeJsonToRangeJson(colorGradientJson);
         this.colorGradientFetched = true;
         
         this.continueIfFinished();
     };
 
     InitializationRoutine.prototype.continueIfFinished = function() {
-        if (this.gridIDFetched
+        if (this.gridBoundsFetched
+            && this.gridIDFetched
             && this.exportFormatFetched
             && this.sensorTypeFetched
             && this.colorGradientFetched) {

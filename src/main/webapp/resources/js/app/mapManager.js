@@ -12,12 +12,17 @@ define(['appManager', 'leafletUtil', 'leaflet'], function(AppManager, LeafletUti
     };
 
     displayLayer = function(index) {
-        if (currentLayer != null) {
+        if ((currentLayer != null)
+            && (currentLayer != undefined)) {
             AppManager.MAP.removeLayer(currentLayer);
         }
         currentIndex = index;
         currentLayer = layerArray[currentIndex];
-        currentLayer.addTo(AppManager.MAP);
+        console.log(currentLayer);
+        if ((currentLayer != null)
+            && (currentLayer != undefined)) {
+            currentLayer.addTo(AppManager.MAP);
+        }
     };
 
     displayNextLayer = function() {
@@ -26,7 +31,10 @@ define(['appManager', 'leafletUtil', 'leaflet'], function(AppManager, LeafletUti
         }
         currentIndex = (currentIndex + 1) % layerArray.length;
         currentLayer = layerArray[currentIndex];
-        currentLayer.addTo(AppManager.MAP);
+        if ((currentLayer != null)
+            && (currentLayer != undefined)) {
+            currentLayer.addTo(AppManager.MAP);
+        }
     }
 
     applyColorGradient = function(feature, layer) {
