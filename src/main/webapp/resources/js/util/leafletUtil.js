@@ -1,4 +1,4 @@
-define(['util', 'mathUtil', 'leaflet'], function(Util, MathUtil) {
+define(['bounds', 'util', 'mathUtil', 'leaflet'], function(Bounds, Util, MathUtil) {
     var columnsPer = 10;
     var rowsPer = 10;
     var gridLevel = 1;
@@ -155,14 +155,16 @@ define(['util', 'mathUtil', 'leaflet'], function(Util, MathUtil) {
         /*
         * Initiate a leaflet map.
         */
-       createLeafletMap: function(container, baseMapURL, baseMapAttributes, coordinates, zoomLevel, fullscreenAvailable, mouseCoordinatesVisible) {
-        
+       createLeafletMap: function(container, baseMapURL, baseMapAttributes, mapBounds, coordinates, zoomLevel, fullscreenAvailable, mouseCoordinatesVisible) {
+
             var map = new L.Map(container, {
                 fullscreenControl: fullscreenAvailable,
                 fullscreenControlOptions: {
                     position: 'topleft'
                 }
             });
+
+            map.setMaxBounds(mapBounds.toLeafletMapBounds());
         
             if (mouseCoordinatesVisible) {
                 L.control.coordinates({
@@ -194,14 +196,14 @@ define(['util', 'mathUtil', 'leaflet'], function(Util, MathUtil) {
             map.setView(coordinates, zoomLevel).addLayer(baseMap);
         },
 
-        initializeLeafletMap: function(map, onMoveEnd, onZoomEnd) {
-            map.on("moveend", function() {
+        initializeLeafletMap: function(map, onMoveEnd) {
+            map.on("zoomend", function() {
                 onMoveEnd();
             });
 
-            map.on("zoomend", function() {
-                onZoomEnd();
+            map.on("dragend", function() {
+                onMoveEnd();
             });
-        },
+        }
     }
 });

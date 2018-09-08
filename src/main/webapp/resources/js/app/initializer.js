@@ -1,16 +1,15 @@
 define(['jquery', 'app', 'appState', 'appManager', 'fetchRoutine', 'exportRoutine',
         'recursiveRectangleGrid','recursiveRectangleCluster', 'bounds', 'dynamicHtmlBuilder', 
-        'utcDateTime', 'leafletUtil', 'geoJsonUtil', 'storageUtil', 'requestor', 'mapManager',
+        'utcDateTime', 'leafletUtil', 'storageUtil', 'requestor', 'mapManager', 
         'leaflet', 'bootstrapDatetimepicker', 'bootstrapTouchspin'],
 function($, App, AppState, AppManager, FetchRoutine, ExportRoutine, RecursiveRectangleGrid, 
          RecursiveRectangleCluster, Bounds, DynamicHtmlBuilder, UTCDateTime, LeafletUtil, 
-         GeoJsonUtil, StorageUtil, Requestor, MapManager) {
+         StorageUtil, Requestor, MapManager) {
     var exportModalTemp;
     var favoritesModalTemp;
     var addFavoritesModalTemp;
     var timeSettingsModalTemp;
 
-    var leafletMap;
     var startStopChecked;
 
     return {
@@ -38,43 +37,32 @@ function($, App, AppState, AppManager, FetchRoutine, ExportRoutine, RecursiveRec
             AppManager.MAP = LeafletUtil.createLeafletMap(
                 AppManager.LEAFLET_MAP_CONTAINER,
                 AppManager.BASEMAP_URL, AppManager.BASEMAP_ATTRIBUTION,
+                AppManager.MAP_BOUNDS,
                 AppManager.INITIAL_COORDINATES, AppManager.INITIAL_ZOOMLEVEL,
                 AppManager.IS_FULLSCREEN_AVAILABLE, AppManager.IS_MOUSE_COORDINATES_VISIBLE);
 
             LeafletUtil.initializeLeafletMap(
-                AppManager.MAP, 
+                AppManager.MAP,
                 function() {
+                    AppManager.MAP.panInsideBounds(AppManager.MAP_BOUNDS.toLeafletMapBounds(), { animate: false });
+                    
                     var bounds = new Bounds();
                     bounds.parseLeafletMapBounds(AppManager.MAP.getBounds());
                     AppManager.BOUNDS = bounds;
-                    // console.log(AppManager.BOUNDS);
-                }, 
+                },
                 function() {
+                    AppManager.MAP.panInsideBounds(AppManager.MAP_BOUNDS.toLeafletMapBounds(), { animate: false });
+                    
                     var bounds = new Bounds();
-                    AppManager.BOUNDS = bounds.parseLeafletMapBounds(AppManager.MAP.getBounds());
-                    // console.log(AppManager.BOUNDS);
+                    bounds.parseLeafletMapBounds(AppManager.MAP.getBounds());
+                    AppManager.BOUNDS = bounds;
                 }
             );
-            // AppManager.MAP.on("moveend", function () {
-            //     AppManager.BOUNDS = AppManager.MAP.getBounds();
-            //     // console.log(AppManager.GRID.getClustersContainedInBounds(new Bounds([leafletMapBounds._southWest.lat, leafletMapBounds._southWest.lng],
-            //     //                                                          [leafletMapBounds._northEast.lat, leafletMapBounds._northEast.lng]), 
-            //     //                                                          LeafletUtil.calculateGridLevel(AppManager.MAP.getZoom())));
-            // });
-
-            // AppManager.MAP.on("zoomend", function () {
-            //     AppManager.BOUNDS = AppManager.MAP.getBounds();
-            //     // console.log(AppManager.GRID.getClustersContainedInBounds(new Bounds([leafletMapBounds._southWest.lat, leafletMapBounds._southWest.lng],
-            //     //                                                          [leafletMapBounds._northEast.lat, leafletMapBounds._northEast.lng]), 
-            //     //                                                          LeafletUtil.calculateGridLevel(AppManager.MAP.getZoom())));
-            // });
-
-            // LeafletUtil.initializeGridDemo(AppManager.MAP);
         },
 
         initExportModal: function() {
-            DynamicHtmlBuilder.buildRadioButtonGroup('#exportModalSensorTypeRadioButtons', 'exportModalSensorTypeRadioButtons', AppManager.SENSORTYPES_ARRAY, 'temperature_celsius');
-            DynamicHtmlBuilder.buildRadioButtonGroup('#exportModalExportFormatRadioButtons', 'exportModalExportFormatRadioButtons', AppManager.EXPORTFORMATS_ARRAY, 'CSV');
+            DynamicHtmlBuilder.buildRadioButtonGroup('#exportModalSensorTypeRadioButtons', 'exportModalSensorTypeRadioButtons', AppManager.SENSORTYPES_ARRAY, AppManager.SENSORTYPES_ARRAY[0]);
+            DynamicHtmlBuilder.buildRadioButtonGroup('#exportModalExportFormatRadioButtons', 'exportModalExportFormatRadioButtons', AppManager.EXPORTFORMATS_ARRAY, AppManager.SENSORTYPES_ARRAY[0]);
 
             // Adding Z (-> symbolizes +00:00) at the end of the format doesn't work yet
             $('#exportFrom-datetimepicker').datetimepicker({

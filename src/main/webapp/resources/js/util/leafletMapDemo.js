@@ -64,7 +64,7 @@ define(function() {
         gridLayerGroup = this.createRectangleGrid(map.getBounds(), this.calculateGridLevel(map.getZoom()), columnsPer, rowsPer);
         gridLayerGroup.addTo(map);
     };
-
+    
     resetRectangleGrid = function(map) {
         map.removeLayer(gridLayerGroup);
     };
@@ -78,7 +78,7 @@ define(function() {
             this.updateRectangleGrid(map);
         }
     };
-
+    
     calculateGridLevel = function(zoom) {
         array = [4, 7, 10, 13, 17];
 
@@ -95,7 +95,7 @@ define(function() {
     splitRange = function(range, objectsPerCluster, gridLevel) {
         return (range / Math.pow(objectsPerCluster, gridLevel));
     };
-
+    
     bindPopupContent = function(feature, layer) {
         if (feature.properties && feature.properties.popupContent) {
             layer.bindPopup(feature.properties.popupContent);
@@ -105,6 +105,13 @@ define(function() {
     };
 
     return {
-        initializeGridDemo
+        initializeGridDemo,
+        createRectangleGrid,
+        updateRectangleGrid, 
+        resetRectangleGrid, 
+        handleZoom, 
+        calculateGridLevel, 
+        splitRange, 
+        bindPopupContent
     };
 });

@@ -10,9 +10,9 @@ define(['bounds', 'dimension'], function() {
       */
     function Grid(bounds, rows, columns, gridLevels) {
         this.bounds = bounds;
-        this.rows = rows;
-        this.columns = columns;
-        this.gridLevels = gridLevels;
+        this.rows = Number(rows);
+        this.columns = Number(columns);
+        this.gridLevels = Number(gridLevels);
     }
 
     /**
@@ -35,7 +35,7 @@ define(['bounds', 'dimension'], function() {
       * @param {*} rows the rows
       */
     Grid.prototype.setRows = function(rows) {
-        this.rows = rows;
+        this.rows = Number(rows);
     }
     /**
       * Get the number of rows.
@@ -49,7 +49,7 @@ define(['bounds', 'dimension'], function() {
       * @param {*} columns the columns
       */
     Grid.prototype.setColumns = function(columns) {
-        this.columns = columns;
+        this.columns = Number(columns);
     }
     /**
       * Get the number of columns.
@@ -63,7 +63,7 @@ define(['bounds', 'dimension'], function() {
       * @param {*} gridLevels the gridlevels
       */
     Grid.prototype.setGridLevels = function(gridLevels) {
-        this.gridLevels = gridLevels;
+        this.gridLevels = Number(gridLevels);
     }
     /**
       * Get the number of gridlevels.
@@ -92,6 +92,32 @@ define(['bounds', 'dimension'], function() {
       * @param {*} gridLevel the gridlevel
       */
     Grid.prototype.getClustersContainedInBounds = function(bounds, gridLevel) { }
+
+    /**
+      * Returns the coordinate in the submitted bounds that is closest to the given coordinate.
+      */
+    Grid.prototype.closestCoordinateInBounds = function(bounds, coordinate) {
+        if (bounds.contains(coordinate)) {
+            return coordinate;
+        }
+
+        var x = coordinate[0];
+        var y = coordinate[1];
+
+        if (bounds.getMinX() > x) {
+            x = bounds.getMinX();
+        } else if (bounds.getMaxX() < x) {
+            x = bounds.getMaxX();
+        }
+
+        if (bounds.getMinY() > y) {
+            y = bounds.getMinY();
+        } else if (bounds.getMaxY() < y) {
+            y = bounds.getMaxY();
+        }
+
+        return [x, y];
+    };
 
     return Grid;
 });

@@ -7,7 +7,7 @@ define(['appManager', 'leafletUtil', 'leaflet'], function(AppManager, LeafletUti
         currentIndex = 0;
         layerArray = [];
         for (i = 0; i < geoJsonArray.length; i++) {
-            layerArray.push(LeafletUtil.createLayerFromGeoJson(geoJsonArray[i], applyColorGradient));
+            layerArray.push(LeafletUtil.createLayerFromGeoJson(geoJsonArray[i], this.applyColorGradient));
         }
     };
 
@@ -18,7 +18,6 @@ define(['appManager', 'leafletUtil', 'leaflet'], function(AppManager, LeafletUti
         }
         currentIndex = index;
         currentLayer = layerArray[currentIndex];
-        console.log(currentLayer);
         if ((currentLayer != null)
             && (currentLayer != undefined)) {
             currentLayer.addTo(AppManager.MAP);

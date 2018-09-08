@@ -3,7 +3,6 @@ function(Grid, RecursiveRectangleCluster, Bounds, Dimension, MathUtil) {
     /**
       * A regular grid, consisting of rectangle clusters with equal size.
       * 
-      * @param {*} gridID the identifier of this grid
       * @param {*} bounds the bounds the grid should be applied on
       * @param {*} rows the number of rows
       * @param {*} columns the number of columns
@@ -16,7 +15,8 @@ function(Grid, RecursiveRectangleCluster, Bounds, Dimension, MathUtil) {
     RecursiveRectangleGrid.prototype.constructor = RecursiveRectangleGrid;
 
     /**
-      * Get the cluster containing the submitted coordinate at the given gridlevel.
+      * Get the cluster containing the submitted coordinate at the given gridlevel. If the coordiante is
+      * out of bounds the cluster closest to it is returned.
       * 
       * @param {*} coordinate the coordinate
       * @param {*} gridLevel the gridlevel
@@ -32,10 +32,10 @@ function(Grid, RecursiveRectangleCluster, Bounds, Dimension, MathUtil) {
             var row = MathUtil.mod(Math.floor(this.calculateCoordinateRelativeToBounds(this.getBounds(), coordinate)[0] / clusterDimension.getWidth()), this.getRows());
             var column = MathUtil.mod(Math.floor(this.calculateCoordinateRelativeToBounds(this.getBounds(), coordinate)[1] / clusterDimension.getHeight()), this.getColumns());
 
-            rowColumnArray.push([row, column]);
+            rowColumnArray.push([column, row]);
         }
 
-        return this.createRecursiveRectanlgeCluster(rowColumnArray);
+        return this.createRecursiveRectangleCluster(rowColumnArray);
     };
 
     /**
@@ -48,9 +48,9 @@ function(Grid, RecursiveRectangleCluster, Bounds, Dimension, MathUtil) {
         // Call this function in superclass
         Grid.prototype.getClustersContainedInBounds.call(this);
 
-        var lowerLeftCluster  = this.getClusterContainingCoordinate(bounds.getLowerLeft(), gridLevel);
-        var upperRightCluster = this.getClusterContainingCoordinate(bounds.getUpperRight(), gridLevel);
-
+        var lowerLeftCluster  = this.getClusterContainingCoordinate(this.closestCoordinateInBounds(this.getBounds(), bounds.getLowerLeft()), gridLevel);
+        var upperRightCluster = this.getClusterContainingCoordinate(this.closestCoordinateInBounds(this.getBounds(), bounds.getUpperRight()), gridLevel);
+        
         var rowMin = 0;
         var columnMin = 0;
         var rowMax = 0;
@@ -108,7 +108,7 @@ function(Grid, RecursiveRectangleCluster, Bounds, Dimension, MathUtil) {
       * 
       * @param {*} rowColumnArray the row column array
       */
-    RecursiveRectangleGrid.prototype.createRecursiveRectanlgeCluster = function(rowColumnArray) {
+    RecursiveRectangleGrid.prototype.createRecursiveRectangleCluster = function(rowColumnArray) {
         var clusterID = this.getGridID() + ":";
 
         for (i = 0; i < rowColumnArray.length; i++) {

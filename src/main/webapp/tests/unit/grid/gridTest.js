@@ -1,5 +1,9 @@
 define(['grid', 'bounds'], function(Grid, Bounds) {
     describe("grid/grid", function() {
+        var grid;
+
+        var gridID = "recursiveRectangleGrid-2_2_3";
+
         describe("constructor", function() {
             it("valid initialization", function() {
 
@@ -45,6 +49,14 @@ define(['grid', 'bounds'], function(Grid, Bounds) {
         });
 
         describe("methods", function() {
+            var closestCoordinateInBoundsParam1 = [new Bounds([0, 0], [100, 100]), [50, 50], [50, 50]];
+            var closestCoordinateInBoundsParam2 = [new Bounds([-50, 0], [50, 100]), [100, 0], [50, 0]];
+            var closestCoordinateInBoundsParam3 = [new Bounds([50, 50], [100, 100]), [0, 0], [50, 50]];
+            
+            beforeAll(function() {
+                grid = new Grid(gridID);
+            });
+
             it("get grid identifier", function() {
 
             });
@@ -55,6 +67,29 @@ define(['grid', 'bounds'], function(Grid, Bounds) {
 
             it("get clusters contained in bounds", function() {
 
+            });
+
+            it("closest coordinate in bounds", function() {
+                expect(
+                    grid.closestCoordinateInBounds(
+                        closestCoordinateInBoundsParam1[0],
+                        closestCoordinateInBoundsParam1[1]
+                    )
+                ).toEqual(closestCoordinateInBoundsParam1[2]);
+
+                expect(
+                    grid.closestCoordinateInBounds(
+                        closestCoordinateInBoundsParam2[0],
+                        closestCoordinateInBoundsParam2[1]
+                    )
+                ).toEqual(closestCoordinateInBoundsParam2[2]);
+
+                expect(
+                    grid.closestCoordinateInBounds(
+                        closestCoordinateInBoundsParam3[0],
+                        closestCoordinateInBoundsParam3[1]
+                    )
+                ).toEqual(closestCoordinateInBoundsParam3[2]);
             });
         });
     });

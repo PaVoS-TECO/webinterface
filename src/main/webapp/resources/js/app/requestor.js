@@ -203,10 +203,17 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
 
     xmlHttpRequest = function(type, url, asynchronous, callback) {
         var xmlHttp = new XMLHttpRequest();
+        console.log("XMLHttpRequest Pending >>> " + url);
         xmlHttp.onreadystatechange = function() {
-            if ((xmlHttp.readyState == 4) && (xmlHttp.status === 200)) {
-                console.log("XMLHttpRequest Success >>> " + url + " >>> " + xmlHttp.responseText);
-                callback(xmlHttp.responseText);
+            if (xmlHttp.readyState == 4) {
+                if (xmlHttp.status === 200) {
+                    console.log("XMLHttpRequest Success >>> " + url + " >>> " + xmlHttp.responseText);
+                    callback(xmlHttp.responseText);
+                } else if (xmlHttp.status >= 400) {
+                    xmlHttp.abort;
+                    console.error("XMLHttpRequest Error >>> " + url + " >>> " + xmlHttp.responseText);
+                    callback();
+                }
             }
         }
         xmlHttp.open(type, url, asynchronous);

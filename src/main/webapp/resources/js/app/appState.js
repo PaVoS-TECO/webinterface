@@ -188,7 +188,7 @@ define(['storageUtil'], function(StorageUtil) {
         var success = true;
         try {
             StorageUtil.removeFromIdentifiersArray(this.getIdentifier());
-            StorageUtil.delete(this.getIdentifier());
+            StorageUtil.remove(this.getIdentifier());
         } catch (e) {
             success = false;
         }

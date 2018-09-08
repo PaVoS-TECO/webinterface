@@ -7,6 +7,22 @@ define(['bounds', 'dimension'], function(Bounds, Dimension) {
         });
 
         describe("methods", function() {
+            it("get min x", function() {
+
+            });
+
+            it("get max x", function() {
+
+            });
+
+            it("get min y", function() {
+
+            });
+
+            it("get max y", function() {
+
+            });
+
             it("get lower left", function() {
 
             });
@@ -20,6 +36,10 @@ define(['bounds', 'dimension'], function(Bounds, Dimension) {
             });
 
             it("get upper right", function() {
+
+            });
+
+            it("contains", function() {
 
             });
 

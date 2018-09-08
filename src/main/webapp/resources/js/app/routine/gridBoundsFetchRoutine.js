@@ -10,8 +10,6 @@ define(['requestor', 'parser'], function(Requestor, Parser) {
 
     GridBoundsFetchRoutine.prototype.handleGridBoundsRequest = function(response) {
         console.log("STOP GridBoundsFetchRoutine");
-        console.log(JSON.parse(response));
-        console.log(Parser.parseJsonToBounds(response));
         this.callback(Parser.parseJsonToBounds(response));
     };
 

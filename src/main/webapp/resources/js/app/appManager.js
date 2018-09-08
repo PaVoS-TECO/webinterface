@@ -45,7 +45,7 @@ define(["appState", "color", "multiColorGradient", "bounds", "recursiveRectangle
     var GEOJSON_ARRAY = [];
     var HISTORICAL_SNAPSHOT_AMOUNT = 20;
     var LIVE_MODE_ENABLED = false;
-    var GRID_LEVEL = 1;
+    var GRID_LEVEL = 2;
     var SENSORTYPES_ARRAY = ["temperature_celsius", "pollution", "airpressure", "waterflow", "blub", "blab"];
     var EXPORTFORMATS_ARRAY = ["NetCDF", "CSV"];
     var REFRESH_STATES_ARRAY = ["Automatic", "Manual"];
