@@ -29,6 +29,10 @@ define(["appState", "color", "multiColorGradient", "bounds", "recursiveRectangle
                           "recursiveRectangleGrid-10_10_5:6_5-3_2", "20.1",
                           "recursiveRectangleGrid-10_10_5:6_5-3_3", "", 
                           "recursiveRectangleGrid-10_10_5:6_5-3_4", "", 
+                          "recursiveRectangleGrid-10_10_5:6_5-3_5", "21.3",
+                          "recursiveRectangleGrid-10_10_5:6_5-3_2", "20.1",
+                          "recursiveRectangleGrid-10_10_5:6_5-3_3", "", 
+                          "recursiveRectangleGrid-10_10_5:6_5-3_4", "", 
                           "recursiveRectangleGrid-10_10_5:6_5-3_5", "21.3"
                          ]
                         ];
@@ -43,24 +47,27 @@ define(["appState", "color", "multiColorGradient", "bounds", "recursiveRectangle
         2500,
         true);
     var GEOJSON_ARRAY = [];
-    var HISTORICAL_SNAPSHOT_AMOUNT = 20;
+    var HISTORICAL_SNAPSHOT_AMOUNT = 10;
     var LIVE_MODE_ENABLED = false;
     var GRID_LEVEL = 2;
+    var LEAFLET_ZOOM_TO_GRID_LEVEL_ARRAY = [3, 6];
     var SENSORTYPES_ARRAY = ["temperature_celsius", "pollution", "airpressure", "waterflow", "blub", "blab"];
     var EXPORTFORMATS_ARRAY = ["NetCDF", "CSV"];
     var REFRESH_STATES_ARRAY = ["Automatic", "Manual"];
     var COLOR_GRADIENTS = {
         "temperature_celsius": new MultiColorGradient([new Color("#0000ff"), new Color("#00ff00"), new Color("#ff0000")])
     };
+    var COLOR_GRADIENTS_DEFAULT = new MultiColorGradient([new Color("#0000ff"), new Color("#00ff00"), new Color("#ff0000")]);
     var COLOR_GRADIENTS_RANGE = {
         "temperature_celsius": [-20, 50]
     };
+    var COLOR_GRADIENTS_RANGE_DEFAULT = [-20, 50];
     var FILL_COLOR_OPACITY = 0.2;
     var BORDER_COLOR_OPACITY = 0.6;
     var BORDER_WEIGHT = 0.5;
     var EXPORT_TIMEOUT = 10000;
     var EXPORT_STATUS_TIMEOUT = 500;
-    var HTTP_REQUEST_TIMEOUT = 5000;
+    var HTTP_REQUEST_TIMEOUT = 30000;
     var GRAFANA_URL;
     var DOWNLOAD_FORMAT = "zip";
     
@@ -91,13 +98,16 @@ define(["appState", "color", "multiColorGradient", "bounds", "recursiveRectangle
         HISTORICAL_SNAPSHOT_AMOUNT,
         LIVE_MODE_ENABLED,
         GRID_LEVEL,
+        LEAFLET_ZOOM_TO_GRID_LEVEL_ARRAY,
 
         SENSORTYPES_ARRAY,
         EXPORTFORMATS_ARRAY,
         REFRESH_STATES_ARRAY,
 
         COLOR_GRADIENTS,
+        COLOR_GRADIENTS_DEFAULT,
         COLOR_GRADIENTS_RANGE,
+        COLOR_GRADIENTS_RANGE_DEFAULT,
         FILL_COLOR_OPACITY,
         BORDER_COLOR_OPACITY,
         BORDER_WEIGHT,

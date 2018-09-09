@@ -201,6 +201,11 @@
 .sensortable-tr-clicked:hover {
   background-color: yellow !important;
 }
+  
+.stickyHeader th {
+	position: sticky;
+	top: 0;
+}
 
 .border {
 	border: 2px solid var(--darkgreen);

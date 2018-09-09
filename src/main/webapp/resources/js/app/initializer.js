@@ -1,10 +1,10 @@
-define(['jquery', 'app', 'appState', 'appManager', 'fetchRoutine', 'exportRoutine',
+define(['jquery', 'app', 'appManager', 'appState', 'mapManager', 'fetchRoutine', 'exportRoutine',
         'recursiveRectangleGrid','recursiveRectangleCluster', 'bounds', 'dynamicHtmlBuilder', 
-        'utcDateTime', 'leafletUtil', 'storageUtil', 'requestor', 'mapManager', 
+        'utcDateTime', 'leafletUtil', 'mathUtil', 'storageUtil', 'requestor', 'mapManager', 
         'leaflet', 'bootstrapDatetimepicker', 'bootstrapTouchspin'],
-function($, App, AppState, AppManager, FetchRoutine, ExportRoutine, RecursiveRectangleGrid, 
+function($, App, AppManager, AppState, MapManager, FetchRoutine, ExportRoutine, RecursiveRectangleGrid, 
          RecursiveRectangleCluster, Bounds, DynamicHtmlBuilder, UTCDateTime, LeafletUtil, 
-         StorageUtil, Requestor, MapManager) {
+         MathUtil, StorageUtil, Requestor, MapManager) {
     var exportModalTemp;
     var favoritesModalTemp;
     var addFavoritesModalTemp;
@@ -28,7 +28,7 @@ function($, App, AppState, AppManager, FetchRoutine, ExportRoutine, RecursiveRec
             this.initFavoritesModal();
             this.initAddFavoriteModal();
             this.initContentTable();
-            this.initTimetstampSlider();
+            this.initTimestampSlider();
             this.initStartStopUpdateButtons();
             this.initTimeSettingsModal();
         },
@@ -49,6 +49,8 @@ function($, App, AppState, AppManager, FetchRoutine, ExportRoutine, RecursiveRec
                     var bounds = new Bounds();
                     bounds.parseLeafletMapBounds(AppManager.MAP.getBounds());
                     AppManager.BOUNDS = bounds;
+
+                    AppManager.GRID_LEVEL = (2 + MathUtil.indexOfValueInSortedArray(AppManager.LEAFLET_ZOOM_TO_GRID_LEVEL_ARRAY, AppManager.MAP.getZoom()));
                 },
                 function() {
                     AppManager.MAP.panInsideBounds(AppManager.MAP_BOUNDS.toLeafletMapBounds(), { animate: false });
@@ -56,6 +58,8 @@ function($, App, AppState, AppManager, FetchRoutine, ExportRoutine, RecursiveRec
                     var bounds = new Bounds();
                     bounds.parseLeafletMapBounds(AppManager.MAP.getBounds());
                     AppManager.BOUNDS = bounds;
+
+                    AppManager.GRID_LEVEL = (2 + MathUtil.indexOfValueInSortedArray(AppManager.LEAFLET_ZOOM_TO_GRID_LEVEL_ARRAY, AppManager.MAP.getZoom()));
                 }
             );
         },
@@ -270,23 +274,30 @@ function($, App, AppState, AppManager, FetchRoutine, ExportRoutine, RecursiveRec
             });
         },
 
-        initTimetstampSlider: function() {
-            setInterval(function(){
-                if (!startStopChecked) {
-                    $('#timeStampSlider').val((Number($('#timeStampSlider').val()) + 5) % 100);
-                    // AppManager.MAP.trigger('moveend');
-                }
-            }, 750);
-
-            $('#timeStampSlider').popover({
-                title: "Title",
-                content: "Content",
-                placement: "bottom"
+        initTimestampSlider: function() {
+            $('#timeStampSlider').prop({
+                'min': 1,
+                'max': (AppManager.HISTORICAL_SNAPSHOT_AMOUNT + 1),
+                'step': 1,
+                'value': 1
             });
 
-            // $('#timeStampSlider').hover(function() {
-            //     console.log("HELLO");
-            // });
+            $('#timeStampSlider').on('change', function() {
+                MapManager.displayLayer(Number($('#timeStampSlider').val()) - 1);
+
+                var popover = $('#timeStampSlider').data('bs.popover');
+                popover.options.content = MapManager.getCurrentTimestamp();
+                popover.options.placement = "bottom";
+                popover.options.trigger = "focus";
+                
+                $('#timeStampSlider').popover('show');
+            });
+
+            $('#timeStampSlider').popover({
+                content: MapManager.getCurrentTimestamp(),
+                placement: "bottom",
+                trigger: "focus"
+            });
         },
 
         initStartStopUpdateButtons: function() {

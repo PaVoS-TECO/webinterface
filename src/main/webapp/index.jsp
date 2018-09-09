@@ -331,7 +331,7 @@
         <div class="row">
           <div class="col-sm">
             <div id='sensortableContainer' class="border">
-              <table id='sensortable'></table>
+              <table id='sensortable' class="stickyHeader"></table>
             </div>
           </div>
         </div>
@@ -346,7 +346,7 @@
       <!-- SLIDER -->
         <div class="row">
           <div id='sliderContainer'>
-            <input id='timeStampSlider' type="range" min="1" max="100" value="50" class="slider" id="myRange">
+            <input id='timeStampSlider' class="slider" type="range" value="1">
           </div>
         </div>
       <!-- SLIDER -->
@@ -477,7 +477,7 @@
       <!-- GRAPH -->
         <div class="row">
           <div id="graphContainer">
-            <iframe src="http://pavos.oliver.pw:3000/d-solo/86xD1ahik/main?panelId=2&orgId=1&refresh=10s&tab=metrics&var-Grid=recursiveRectangleGrid-2_2_3&var-ClusterLevel1=All&var-ClusterLevel2=All&var-ClusterLevel3=All&var-Sensors=All&var-ObservationType=temperature_celsius&theme=light" width="100%" height="100%" frameborder="0"></iframe>
+            <!-- <iframe src="http://pavos.oliver.pw:3000/d-solo/86xD1ahik/main?panelId=2&orgId=1&refresh=10s&tab=metrics&var-Grid=recursiveRectangleGrid-2_2_3&var-ClusterLevel1=All&var-ClusterLevel2=All&var-ClusterLevel3=All&var-Sensors=All&var-ObservationType=temperature_celsius&theme=light" width="100%" height="100%" frameborder="0"></iframe> -->
           </div>
         </div>
       <!-- GRAPH -->

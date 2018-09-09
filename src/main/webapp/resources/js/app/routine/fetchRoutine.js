@@ -1,5 +1,5 @@
-define(['appManager', 'mapManager', 'liveClusterGeoJsonFetchRoutine', 'historicalClusterGeoJsonFetchRoutine', 'parser'], 
-function(AppManager, MapManager, LiveClusterGeoJsonFetchRoutine, HistoricalClusterGeoJsonFetchRoutine, Parser) {
+define(['jquery', 'appManager', 'mapManager', 'liveClusterGeoJsonFetchRoutine', 'historicalClusterGeoJsonFetchRoutine', 'dynamicHtmlBuilder', 'parser'], 
+function($, AppManager, MapManager, LiveClusterGeoJsonFetchRoutine, HistoricalClusterGeoJsonFetchRoutine, DynamicHtmlBuilder, Parser) {
     var timer = null;
     var running = false;
 
@@ -7,7 +7,7 @@ function(AppManager, MapManager, LiveClusterGeoJsonFetchRoutine, HistoricalClust
         console.log("FetchRoutine.running = " + running);
         if (!running) {
             running = true;
-            var clusterGeoJsonFetchRoutine
+            var clusterGeoJsonFetchRoutine;
 
             if (AppManager.LIVE_MODE_ENABLED) {
                 clusterGeoJsonFetchRoutine =
@@ -36,9 +36,25 @@ function(AppManager, MapManager, LiveClusterGeoJsonFetchRoutine, HistoricalClust
 
     handleFetchResponse = function(response) {
         console.log("STOP Fetchroutine");
-
+        
         MapManager.updateLayerArray(response);
         MapManager.displayLayer(0);
+
+        var tableContentArray = [];
+        var contentArray = [];
+        if (response[0] != undefined) {
+            var featureArray = response[0]["features"];
+            for (featureIndex = 0; featureIndex < featureArray.length; featureIndex++) {
+                contentArray = featureArray[featureIndex]["properties"]["content"];
+                for (contentIndex = 0; contentIndex < contentArray.length; contentIndex++) {
+                    tableContentArray.push(contentArray[contentIndex]);
+                    tableContentArray.push("");
+                }
+            }
+        }
+        AppManager.CONTENT_TABLE = [["id", AppManager.APP_STATE.getSelectedSensortype()], tableContentArray];
+        $('#sensortable tr').remove();
+        DynamicHtmlBuilder.buildTableContentFromArray('#sensortable', AppManager.CONTENT_TABLE[0], AppManager.CONTENT_TABLE[1]);
 
         running = false;
     };

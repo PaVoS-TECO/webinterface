@@ -1,13 +1,18 @@
-define(['appManager', 'leafletUtil', 'leaflet'], function(AppManager, LeafletUtil) {
+define(['appManager', 'parser', 'leafletUtil', 'leaflet'], function(AppManager, Parser, LeafletUtil) {
     var layerArray = [];
+    var timestampArray = [];
     var currentLayer = null;
     var currentIndex = 0;
 
     updateLayerArray = function(geoJsonArray) {
-        currentIndex = 0;
         layerArray = [];
+        timestampArray = [];
+        currentIndex = 0;
         for (i = 0; i < geoJsonArray.length; i++) {
-            layerArray.push(LeafletUtil.createLayerFromGeoJson(geoJsonArray[i], this.applyColorGradient));
+            timestampArray.push(geoJsonArray[i]["timestamp"]);
+            console.log(timestampArray);
+            console.log("looped");
+            layerArray.push(LeafletUtil.createLayerFromGeoJson(JSON.parse(JSON.stringify(geoJsonArray[i])), this.applyColorGradient));
         }
     };
 
@@ -16,7 +21,11 @@ define(['appManager', 'leafletUtil', 'leaflet'], function(AppManager, LeafletUti
             && (currentLayer != undefined)) {
             AppManager.MAP.removeLayer(currentLayer);
         }
-        currentIndex = index;
+        if ((0 <= index) && (index <= (layerArray.length - 1))) {
+            currentIndex = index;
+        } else {
+            currentIndex = 0;
+        }
         currentLayer = layerArray[currentIndex];
         if ((currentLayer != null)
             && (currentLayer != undefined)) {
@@ -34,15 +43,36 @@ define(['appManager', 'leafletUtil', 'leaflet'], function(AppManager, LeafletUti
             && (currentLayer != undefined)) {
             currentLayer.addTo(AppManager.MAP);
         }
-    }
+    };
+
+    getCurrentTimestamp = function() {
+        return timestampArray[currentIndex];
+    };
 
     applyColorGradient = function(feature, layer) {
+        var min;
+        var max;
+        var gradient;
+
+        if (AppManager.COLOR_GRADIENTS_RANGE[AppManager.APP_STATE.getSelectedSensortype()] == undefined
+            || AppManager.COLOR_GRADIENTS[AppManager.APP_STATE.getSelectedSensortype()] == undefined) {
+
+            min = AppManager.COLOR_GRADIENTS_RANGE_DEFAULT[0];
+            max = AppManager.COLOR_GRADIENTS_RANGE_DEFAULT[1];
+            gradient = AppManager.COLOR_GRADIENTS_DEFAULT;
+
+        } else {
+            min = AppManager.COLOR_GRADIENTS_RANGE[AppManager.APP_STATE.getSelectedSensortype()][0];
+            max = AppManager.COLOR_GRADIENTS_RANGE[AppManager.APP_STATE.getSelectedSensortype()][1];
+            gradient = AppManager.COLOR_GRADIENTS[AppManager.APP_STATE.getSelectedSensortype()];
+        }
+
         layer.setStyle(
             LeafletUtil.getStyle(
-                AppManager.COLOR_GRADIENTS_RANGE[AppManager.APP_STATE.getSelectedSensortype()][0], 
-                AppManager.COLOR_GRADIENTS_RANGE[AppManager.APP_STATE.getSelectedSensortype()][1], 
+                min,
+                max,
                 Number(feature['properties']['value']), 
-                AppManager.COLOR_GRADIENTS[AppManager.APP_STATE.getSelectedSensortype()], 
+                gradient,
                 AppManager.FILL_COLOR_OPACITY, 
                 AppManager.BORDER_COLOR_OPACITY, 
                 AppManager.BORDER_WEIGHT));
@@ -52,6 +82,7 @@ define(['appManager', 'leafletUtil', 'leaflet'], function(AppManager, LeafletUti
         updateLayerArray,
         displayLayer,
         displayNextLayer,
+        getCurrentTimestamp,
         applyColorGradient
     };
 });
