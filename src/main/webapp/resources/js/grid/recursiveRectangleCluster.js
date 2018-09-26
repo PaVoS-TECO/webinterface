@@ -1,6 +1,6 @@
 define(['cluster'], function(Cluster) {
-    function RecursiveRectangleCluster(clusterID) {
-        Cluster.call(this, clusterID);
+    function RecursiveRectangleCluster(clusterID, coordinates) {
+        Cluster.call(this, clusterID, coordinates);
     }
     RecursiveRectangleCluster.prototype = Object.create(Cluster.prototype);
     RecursiveRectangleCluster.prototype.constructor = RecursiveRectangleCluster;

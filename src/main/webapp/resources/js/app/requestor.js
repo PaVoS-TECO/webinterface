@@ -1,28 +1,47 @@
 define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function($, AppManager, Util, GridUtil) {
-    var EDMS_URL    = AppManager.SERVER_URL + ':' + AppManager.EDMS_PORT + '/';
-    var CORE_URL    = AppManager.SERVER_URL + ':' + AppManager.CORE_PORT + '/';
-    var GRAFANA_URL = AppManager.SERVER_URL + ':' + AppManager.GRAFANA_PORT + '/';
+    var EDMS_URL = 
+        AppManager.SERVER_URL 
+        + ':' 
+        + AppManager.EDMS_PORT 
+        + '/';
+    var CORE_URL = 
+        AppManager.SERVER_URL 
+        + ':' 
+        + AppManager.CORE_PORT 
+        + '/';
+    var GRAFANA_URL = 
+        AppManager.SERVER_URL 
+        + ':' 
+        + AppManager.GRAFANA_PORT 
+        + '/' 
+        + AppManager.GRAFANA_PANEL_TYPE
+        + '/'
+        + AppManager.GRAFANA_PANEL_ID
+        + '/';
 
-    requestGridBounds = function(callback) {
+    requestGridBounds = function(callback, errorCallback) {
         this.xmlHttpRequest(
             "GET",
             (CORE_URL
                 + 'getGridBounds?'),
             true,
-            callback
+            callback,
+            errorCallback
         );
     };
 
-    requestGridID = function(callback) {
+    requestGridID = function(callback, errorCallback) {
         this.xmlHttpRequest(
             "GET",
             (CORE_URL
                 + 'getGridID?'),
             true,
-            callback);
+            callback,
+            errorCallback
+        );
     };
 
-    requestSensortypes = function(gridID, callback) {
+    requestSensortypes = function(gridID, callback, errorCallback) {
         this.xmlHttpRequest(
             "GET",
             (CORE_URL
@@ -30,19 +49,23 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
                 + this.formatParameters(['gridID'],
                                         [gridID])),
             true,
-            callback);
+            callback, 
+            errorCallback
+        );
     };
 
-    requestColorGradients = function(callback) {
+    requestColorGradients = function(callback, errorCallback) {
         this.xmlHttpRequest(
             "GET",
             (CORE_URL
                 + 'getAllGradients?'),
             true,
-            callback);
+            callback, 
+            errorCallback
+        );
     };
 
-    requestLiveClusterGeoJson = function(gridID, clusterArray, property, callback) {
+    requestLiveClusterGeoJson = function(gridID, clusterArray, property, callback, errorCallback) {
         var valueArray = [
             gridID, 
             Util.concat(GridUtil.clusterArrayToStringArray(clusterArray), ','),
@@ -56,10 +79,12 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
                 + this.formatParameters(['gridID', 'clusterID', 'property'],
                                         valueArray)),
             true,
-            callback);
+            callback, 
+            errorCallback
+        );
     };
 
-    requestHistoricalClusterGeoJson = function(gridID, clusterArray, property, utcDateTimeArray, steps, callback) {
+    requestHistoricalClusterGeoJson = function(gridID, clusterArray, property, utcDateTimeArray, steps, callback, errorCallback) {
         var valueArray = [
             gridID, 
             Util.concat(GridUtil.clusterArrayToStringArray(clusterArray), ','),
@@ -75,10 +100,12 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
                 + this.formatParameters(['gridID', 'clusterID', 'property', 'time', 'steps'],
                                         valueArray)),
             true,
-            callback);
+            callback, 
+            errorCallback
+        );
     };
 
-    requestSensorGeoJson = function(gridID, sensorID, property, callback) {
+    requestSensorGeoJson = function(gridID, sensorID, property, callback, errorCallback) {
         this.xmlHttpRequest(
             "GET",
             (CORE_URL
@@ -86,10 +113,12 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
                 + this.formatParameters(['gridID', 'sensorID', 'property'],
                                         [gridID, sensorID, property])),
             true,
-            callback);
+            callback, 
+            errorCallback
+        );
     };
 
-    requestSensorReport = function(sensorID, reason, callback) {
+    requestSensorReport = function(sensorID, reason, callback, errorCallback) {
         this.xmlHttpRequest(
             "GET",
             (CORE_URL
@@ -97,50 +126,122 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
                 + this.formatParameters(['sensorID', 'reason'],
                                         [sensorID, reason])),
             true,
-            callback);
+            callback, 
+            errorCallback
+        );
     };
 
-    requestGraph = function(live, from, to, gridID, clusterID, sensorIDs, sensorType) {
+    requestLiveGraphForSensor = function(gridID, sensorID, sensorType) {
+        AppManager.GRAFANA_URL = (
+            GRAFANA_URL
+            + 'main?'
+            + this.formatParameters(['orgId', 'from', 'to', 'var-GridID'], [1, 'now/d', 'now', gridID])
+            + '&'
+            + this.formatParameters(['var-Sensor', 'var-ObservationType', 'panelId', 'theme'], [sensorID, sensorType, 2, 'light'])
+        );
+
+        console.log(AppManager.GRAFANA_URL);
+
+        document.getElementById('graph').src = AppManager.GRAFANA_URL;
+    }
+
+    requestHistoricalGraphForSensor = function(from, to, gridID, sensorID, sensorType) {
+        // Turn UTC DateTime into its absolute seconds form
+        var fromDate = new Date(from.toString());
+        var toDate = new Date(to.toString());
+        var formatFrom = fromDate.getTime();
+        var formatTo = toDate.getTime();
+
+        // // Turn UTC DateTime into plain String of numbers.
+        // var formatFrom = Util.replaceAll(from.toString(), ['-', 'T', ':', 'Z'], ['', '', '', '']);
+        // var formatTo   = Util.replaceAll(to.toString(), ['-', 'T', ':', 'Z'], ['', '', '', '']);
+
+        AppManager.GRAFANA_URL = (
+            GRAFANA_URL
+            + 'main?'
+            + this.formatParameters(['orgId', 'from', 'to', 'var-GridID'], [1, formatFrom, formatTo, gridID])
+            + '&'
+            + this.formatParameters(['var-Sensor', 'var-ObservationType', 'panelId', 'theme'], [sensorID, sensorType, 2, 'light'])
+        );
+
+        console.log(AppManager.GRAFANA_URL);
+
+        document.getElementById('graph').src = AppManager.GRAFANA_URL;
+    }
+
+    requestLiveGraphForCluster = function(gridID, clusterID, sensorType) {
+        // The rows and columns for each grid level of the submitted clusterID
+
+        var clusterArray = clusterID.split(':')[1].split('-');
+        var formatClusterID = '';
+        var i = -1;
+        clusterArray.forEach(function(element) {
+            i++;
+            formatClusterID = formatClusterID + this.formatParameters(['var-ClusterLevel' + (i + 1)], [element]);
+        });
+
+        AppManager.GRAFANA_URL = (
+            GRAFANA_URL
+            + 'main?'
+            + this.formatParameters(['orgId', 'from', 'to', 'var-GridID'], [1, 'now/d', 'now', gridID])
+            + '&'
+            + formatClusterID
+            + '&'
+            + this.formatParameters(['var-ObservationType', 'panelId', 'theme'], [sensorType, 2, 'light'])
+        );
+
+        console.log(AppManager.GRAFANA_URL);
+
+        document.getElementById('graph').src = AppManager.GRAFANA_URL;
+    };
+
+    requestHistoricalGraphForCluster = function(from, to, gridID, clusterID, sensorType) {
         // The rows and columns for each grid level of the submitted clusterID
         var clusterArray = clusterID.split(':')[1].split('-');
         var formatClusterID = '';
-        for (i = 0; i < clusterArray.length; i++) {
-            formatClusterID = formatClusterID + this.formatParameters(['var-ClusterLevel' + (i + 1)], [clusterArray[i]]);
-        }
+        var i = -1;
+        clusterArray.forEach(function(element) {
+            i++;
+            formatClusterID = formatClusterID + this.formatParameters(['var-ClusterLevel' + (i + 1)], [element]);
+        });
 
-        if (live) {
-            AppManager.GRAFANA_URL = GRAFANA_URL
-                + 'main?'
-                + this.formatParameters(['orgId', 'from', 'to', 'var-GridID'], [1, 'now/d', 'now', gridID]);
-                + '&'
-                + formatClusterID
-                + '&'
-                + this.formatParameters(['var-Sensor', 'var-ObservationType', 'panelId', 'theme'], [sensorIDs, sensorType, 2, 'light']);
-        } else {
-            // Turn UTC DateTime into plain String of numbers.
-            var formatFrom = Util.replaceAll(from.toString(), ['-', 'T', ':', 'Z'], ['', '', '', '']);
-            var formatTo   = Util.replaceAll(to.toString(), ['-', 'T', ':', 'Z'], ['', '', '', '']);
+        // Turn UTC DateTime into its absolute seconds form
+        var fromDate = new Date(from.toString());
+        var toDate = new Date(to.toString());
+        var formatFrom = fromDate.getTime();
+        var formatTo = toDate.getTime();
 
-            AppManager.GRAFANA_URL = GRAFANA_URL
-                + 'main?'
-                + this.formatParameters(['orgId', 'from', 'to', 'var-GridID'], [1, formatFrom, formatTo, gridID]);
-                + '&'
-                + formatClusterID
-                + '&'
-                + this.formatParameters(['var-Sensor', 'var-ObservationType', 'panelId', 'theme'], [sensorIDs, sensorType, 2, 'light']);
-        }
-    };
+        // // Turn UTC DateTime into plain String of numbers.
+        // var formatFrom = Util.replaceAll(from.toString(), ['-', 'T', ':', 'Z'], ['', '', '', '']);
+        // var formatTo   = Util.replaceAll(to.toString(), ['-', 'T', ':', 'Z'], ['', '', '', '']);
 
-    requestExportFormats = function(callback) {
+        AppManager.GRAFANA_URL = (
+            GRAFANA_URL
+            + 'main?'
+            + this.formatParameters(['orgId', 'from', 'to', 'var-GridID'], [1, formatFrom, formatTo, gridID])
+            + '&'
+            + formatClusterID
+            + '&'
+            + this.formatParameters(['var-ObservationType', 'panelId', 'theme'], [sensorType, 2, 'light'])
+        );
+
+        console.log(AppManager.GRAFANA_URL);
+
+        document.getElementById('graph').src = AppManager.GRAFANA_URL;
+    }
+
+    requestExportFormats = function(callback, errorCallback) {
         this.xmlHttpRequest(
             "GET",
             (EDMS_URL
                 + 'edms/get?requestType=getExtensions'),
             true,
-            callback);
+            callback, 
+            errorCallback
+        );
     };
 
-    requestExport = function(extension, timeframe, observedProperty, clusters, callback) {
+    requestExport = function(extension, timeframe, observedProperty, clusters, callback, errorCallback) {
         var downloadID = Util.getHashCode(extension + timeframe + observedProperty + clusters);
        
         var array = [downloadID,
@@ -156,10 +257,12 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
                 + this.formatParameters(['downloadID', 'extension', 'timeFrame', 'observedProperties', 'clusters'],
                                         array)),
             true,
-            callback);
+            callback, 
+            errorCallback
+        );
     };
 
-    requestExportStatus = function(extension, timeframe, observedProperty, clusters, callback) {
+    requestExportStatus = function(extension, timeframe, observedProperty, clusters, callback, errorCallback) {
         var downloadID = Util.getHashCode(extension + timeframe + observedProperty + clusters);
 
         this.xmlHttpRequest(
@@ -169,7 +272,9 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
                 + '&downloadID='
                 + downloadID),
             true,
-            callback);
+            callback, 
+            errorCallback
+        );
     };
 
     requestDownload = function(extension, timeframe, observedProperty, clusters) {
@@ -201,7 +306,7 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
         xmlHttp.send();
     };
 
-    xmlHttpRequest = function(type, url, asynchronous, callback) {
+    xmlHttpRequest = function(type, url, asynchronous, callback, errorCallback) {
         var xmlHttp = new XMLHttpRequest();
         console.log("XMLHttpRequest Pending >>> " + url);
         xmlHttp.onreadystatechange = function() {
@@ -212,7 +317,7 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
                 } else if (xmlHttp.status >= 400) {
                     xmlHttp.abort;
                     console.error("XMLHttpRequest Error >>> " + url + " >>> " + xmlHttp.responseText);
-                    callback();
+                    errorCallback();
                 }
             }
         }
@@ -221,12 +326,12 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
         xmlHttp.ontimeout = function() {
             xmlHttp.abort;
             console.error("XMLHttpRequest Timeout >>> " + url);
-            callback();
+            errorCallback();
         }
         xmlHttp.onerror = function() {
             xmlHttp.abort;
             console.error("XMLHttpRequest Error >>> " + url);
-            callback();
+            errorCallback();
         }
         xmlHttp.send();
     };
@@ -282,7 +387,10 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
         requestHistoricalClusterGeoJson,
         requestSensorGeoJson,
         requestSensorReport,
-        requestGraph,
+        requestLiveGraphForSensor,
+        requestHistoricalGraphForSensor,
+        requestLiveGraphForCluster,
+        requestHistoricalGraphForCluster,
         requestExportFormats,
         requestExport,
         requestExportStatus,

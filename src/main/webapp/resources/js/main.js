@@ -13,7 +13,6 @@ require.config({
         'fontAwesomeSolid': '../../vendors/fontawesome/fontawesome-free-5.2.0-web/js/solid.min',
         'loadingOverlay': '../../vendors/jquery-loading-overlay/jquery-loading-overlay-master/src/loadingoverlay',
 
-        'app': '../../resources/js/app/app',
         'appState': '../../resources/js/app/appState',
         'appManager': '../../resources/js/app/appManager',
         'initializer': '../../resources/js/app/initializer',
@@ -56,6 +55,7 @@ require.config({
         'gridUtil': '../../resources/js/util/gridUtil',
         'storageUtil': '../../resources/js/util/storageUtil',
         'mathUtil': '../../resources/js/util/mathUtil',
+        'tableUtil': '../../resources/js/util/tableUtil',
         'util': '../../resources/js/util/util'
     },
     'shim': {
@@ -89,15 +89,15 @@ require.config({
     }
 });
 
-require(['app', 
+require(['initializationRoutine', 'fetchRoutine',
          'jquery', 
          'bootstrap', 'bootstrapDatetimepicker', 'bootstrapTouchspin', 
          'leaflet', 'leafletFullscreen', 'leafletCoordinates', 
        //'fontAwesome', 'fontAwesomeSolid', 
          'loadingOverlay'], 
-         function(App) {
+         function(InitializationRoutine, FetchRoutine) {
 
-    var app = new App();
-    app.run();
+    var initRoutine = new InitializationRoutine(FetchRoutine.run);
+    initRoutine.run();
 
 });

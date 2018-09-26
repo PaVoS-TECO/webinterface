@@ -33,7 +33,7 @@
 
   <div class="container-fluid">
 
-    <div class="row">
+    <div id='upperRow' class="row">
       <div class="col-sm-8">
 	    
       <!-- LEAFLET MAP -->
@@ -327,20 +327,49 @@
         </div>
       <!-- UPPER OPTIONPANEL -->
 	  
-      <!-- SENSORTABLE -->
-        <div class="row">
+      <!-- CONTENTTABLE -->
+        <div id='contentTableRow' class="row">
           <div class="col-sm">
-            <div id='sensortableContainer' class="border">
-              <table id='sensortable' class="stickyHeader"></table>
+            <div id='contenttableContainer' class="border">
+              <table id='contenttable' class="stickyHeader"></table>
             </div>
+
+            <!-- CONTENTTABLE ENTRY MODAL -->
+            <div id='contenttableEntryModal' class="modal fade" tabindex="-1" role="dialog" aria-labelledby="contenttableEntryModal" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h1 class="modal-title text-center"><b>Report</b></h1>
+                  </div>
+                  <div class="modal-body">
+
+                      <div class="row">
+                        <div class="col-sm-12 col-offset-sm-1">
+                          <label for="contenttableEntrySensorReportReasonInput">Enter Sensor Report Reason</label>
+                          <input id="contenttableEntrySensorReportReasonInput" class="form-control" aria-describedby="enterReportReason" placeholder="Enter Report Reason">
+                          <small id="enterSensorReportReason" class="form-text text-muted">Enter the reason for the sensor report.</small>
+                        </div>
+                      </div>
+      
+                  </div>
+                  <div class="modal-footer">
+                    <button id='contenttableEntryModalSensorReportButton' type="button" class="btn btn-secondary float-left">Report Sensor</button>
+                    <button id='contenttableEntryModalDisplayButton' type="button" class="btn btn-primary float-right">Display on Graph</button>
+                    <button id='contenttableEntryModalCancelButton' type="button" class="btn btn-secondary float-right" data-dismiss="modal">Cancel</button>                    
+                  </div>
+                </div>
+              </div>
+            </div>
+          <!-- CONTENTTABLE ENTRY MODAL -->
+
           </div>
         </div>
-      <!-- SENSORTABLE -->
+      <!-- CONTENTTABLE -->
 	
       </div>
     </div>
   
-    <div class="row">
+    <div id='middleRow' class="row">
       <div class="col-sm-8">
 	  
       <!-- SLIDER -->
@@ -471,13 +500,13 @@
       </div>
     </div>
 	
-    <div class="row">
+    <div id='lowerRow' class="row">
       <div class="col-sm-12">
       
       <!-- GRAPH -->
         <div class="row">
           <div id="graphContainer">
-            <!-- <iframe src="http://pavos.oliver.pw:3000/d-solo/86xD1ahik/main?panelId=2&orgId=1&refresh=10s&tab=metrics&var-Grid=recursiveRectangleGrid-2_2_3&var-ClusterLevel1=All&var-ClusterLevel2=All&var-ClusterLevel3=All&var-Sensors=All&var-ObservationType=temperature_celsius&theme=light" width="100%" height="100%" frameborder="0"></iframe> -->
+            <iframe id="graph" src="http://pavos.oliver.pw:3000/d-solo/86xD1ahik/main?panelId=2&orgId=1&refresh=10s&tab=metrics&var-Grid=recursiveRectangleGrid-2_2_3&var-ClusterLevel1=All&var-ClusterLevel2=All&var-ClusterLevel3=All&var-Sensors=All&var-ObservationType=temperature_celsius&theme=light" width="100%" height="100%" frameborder="0"></iframe>
           </div>
         </div>
       <!-- GRAPH -->

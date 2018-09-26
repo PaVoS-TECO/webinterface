@@ -13,8 +13,7 @@
 	
 	--min-map-height: 350px;
 	--min-upper-optionpanel-height: 125px;
-	--min-sensortable-height: 225px;
-	--min-slider-height: 45px;
-	--min-middle-optionpanel-height: 45px;
-	--min-graph-height: 200px;
+	--min-contenttable-height: 225px;
+	--min-middle-row-height: 45px;
+	--min-graph-height: 150px;
 }

@@ -3,9 +3,12 @@ define(["appState", "color", "multiColorGradient", "bounds", "recursiveRectangle
     var EDMS_PORT    = '8084';
     var CORE_PORT    = '7700';
     var GRAFANA_PORT = '3000';
+    var GRAFANA_PANEL_TYPE = 'd-solo';
+    var GRAFANA_PANEL_ID = '86xD1ahik';
+    var GRAFANA_URL;
     
     // Latitude - Longitude
-    var KARLSRUHE = [49.007, 8.404];
+    var KARLSRUHE      = [49.007, 8.404];
     var KARLSRUHE_TECO = [49.013, 8.424];
 
     var LEAFLET_MAP_CONTAINER = "mapContainer";
@@ -16,69 +19,88 @@ define(["appState", "color", "multiColorGradient", "bounds", "recursiveRectangle
     var IS_FULLSCREEN_AVAILABLE = true;
     var IS_MOUSE_COORDINATES_VISIBLE = true;
 
-    var MAP = null;
-    var MAP_BOUNDS = new Bounds([-85.0, -180.0], [85.0, 180.0]);
-    var GRID = new RecursiveRectangleGrid(MAP_BOUNDS, 2, 2, 3);
-    var GRID_LEVEL = 1;
-    var BOUNDS = new Bounds([0, 0], [10, 10]);
-    var CONTENT_TABLE = [
-                         [
-                          "id", "temperature_celsius"
-                         ],
-                         [
-                          "recursiveRectangleGrid-10_10_5:6_5-3_2", "20.1",
-                          "recursiveRectangleGrid-10_10_5:6_5-3_3", "", 
-                          "recursiveRectangleGrid-10_10_5:6_5-3_4", "", 
-                          "recursiveRectangleGrid-10_10_5:6_5-3_5", "21.3",
-                          "recursiveRectangleGrid-10_10_5:6_5-3_2", "20.1",
-                          "recursiveRectangleGrid-10_10_5:6_5-3_3", "", 
-                          "recursiveRectangleGrid-10_10_5:6_5-3_4", "", 
-                          "recursiveRectangleGrid-10_10_5:6_5-3_5", "21.3"
-                         ]
-                        ];
-    var APP_STATE = new AppState(
-        "",
-        [GRID.getClusterContainingCoordinate([49, 8], 2), GRID.getClusterContainingCoordinate([53, 15], 2)],
-        "temperature_celsius", 
-        "CSV",
-        [[new UTCDateTime(2018, 1, 1, 0, 0, 0)], [new UTCDateTime(2018, 8, 1, 0, 0, 0)]], 
-        new UTCDateTime(2018, 7, 23, 12, 25, 0),
-        10000,
-        2500,
-        true);
-    var GEOJSON_ARRAY = [];
-    var HISTORICAL_SNAPSHOT_AMOUNT = 10;
-    var LIVE_MODE_ENABLED = false;
-    var GRID_LEVEL = 2;
-    var LEAFLET_ZOOM_TO_GRID_LEVEL_ARRAY = [3, 6];
-    var SENSORTYPES_ARRAY = ["temperature_celsius", "pollution", "airpressure", "waterflow", "blub", "blab"];
-    var EXPORTFORMATS_ARRAY = ["NetCDF", "CSV"];
-    var REFRESH_STATES_ARRAY = ["Automatic", "Manual"];
-    var COLOR_GRADIENTS = {
-        "temperature_celsius": new MultiColorGradient([new Color("#0000ff"), new Color("#00ff00"), new Color("#ff0000")])
+    var MAP;
+    var MAP_BOUNDS;
+    var MAP_STYLE_EMPTY_CLUSTER = {
+        "fillColor": "#050505",
+        "fillOpacity": 0.05,
+        "color": "#050505",
+        "opacity": 0.25,
+        "weight": 1.5
     };
-    var COLOR_GRADIENTS_DEFAULT = new MultiColorGradient([new Color("#0000ff"), new Color("#00ff00"), new Color("#ff0000")]);
-    var COLOR_GRADIENTS_RANGE = {
-        "temperature_celsius": [-20, 50]
+    var MAP_LAYER_SELECTED_CLUSTERS;
+    var MAP_STYLE_SELECTED_CLUSTERS = {
+        "fillColor": "#88ff00",
+        "fillOpacity": 0.25,
+        "color": "#55bb00",
+        "opacity": 0.5,
+        "weight": 4
     };
-    var COLOR_GRADIENTS_RANGE_DEFAULT = [-20, 50];
+    var MAP_LAYER_HOVERED_OVER_CLUSTER;
+    var MAP_STYLE_HOVERED_OVER_CLUSTER = {
+        "fillColor": "#040404",
+        "fillOpacity": 0.1,
+        "color": "#040404",
+        "opacity": 0.25,
+        "weight": 4
+    };
+
     var FILL_COLOR_OPACITY = 0.2;
     var BORDER_COLOR_OPACITY = 0.6;
-    var BORDER_WEIGHT = 0.5;
+    var BORDER_WEIGHT = 1.5;
+
+    var COLOR_GRADIENTS;
+    var COLOR_GRADIENTS_RANGE;
+    var COLOR_GRADIENTS_DEFAULT = new MultiColorGradient([new Color("#0000ff"), new Color("#00ff00"), new Color("#ff0000")]);
+    var COLOR_GRADIENTS_RANGE_DEFAULT = [-20, 50];
+
+    var GRID;
+    var CURRENT_GRID_LEVEL;
+    var BOUNDS;
+    var APP_STATE;
+
+    var LIVE_MODE_ENABLED;
+    var GEOJSON_ARRAY = [];
+    var HISTORICAL_SNAPSHOT_AMOUNT = 10;
+    var LEAFLET_ZOOM_TO_GRID_LEVEL_ARRAY = [3, 6];
+
+    var HTTP_REQUEST_TIMEOUT = 30000;
     var EXPORT_TIMEOUT = 10000;
     var EXPORT_STATUS_TIMEOUT = 500;
-    var HTTP_REQUEST_TIMEOUT = 30000;
-    var GRAFANA_URL;
     var DOWNLOAD_FORMAT = "zip";
+
+    var SENSORTYPES_ARRAY;
+    var EXPORTFORMATS_ARRAY;
+    var REFRESH_STATES_ARRAY = ["Automatic", "Manual"];
+    var CONTENT_TABLE = [["id", "temperature_celsius"], []];
+    var CURRENT_CONTENT_TABLE_ARRAY;
+    var CONTENT_TABLE_SELECTED_IDENTIFIER;
+
+    var DEFAULT_LIVE_MODE_ENABLED = true;
+    var DEFAULT_TIMEFRAME = [
+        new UTCDateTime(
+            2018, 1, 1, 0, 0, 0
+        ),
+        new UTCDateTime(
+            2018, 9, 1, 0, 0, 0
+        )
+    ];
+    var DEFAULT_LIVE_REFRESH_INTERVAL = 15000;
+    var DEFAULT_HISTORICAL_REFRESH_INTERVAL = 1000;
+    var DEFAULT_AUTOMATIC_REFRESH_ENABLED = false;
     
     return {
         SERVER_URL,
         EDMS_PORT,
         CORE_PORT,
         GRAFANA_PORT,
+        GRAFANA_PANEL_TYPE,
+        GRAFANA_PANEL_ID,
+        GRAFANA_URL,
 
         KARLSRUHE,
         KARLSRUHE_TECO,
+
         LEAFLET_MAP_CONTAINER,
         BASEMAP_URL,
         BASEMAP_ATTRIBUTION,
@@ -89,32 +111,47 @@ define(["appState", "color", "multiColorGradient", "bounds", "recursiveRectangle
 
         MAP,
         MAP_BOUNDS,
+        MAP_STYLE_EMPTY_CLUSTER,
+        MAP_LAYER_SELECTED_CLUSTERS,
+        MAP_STYLE_SELECTED_CLUSTERS,
+        MAP_LAYER_HOVERED_OVER_CLUSTER,
+        MAP_STYLE_HOVERED_OVER_CLUSTER,
+
+        FILL_COLOR_OPACITY,
+        BORDER_COLOR_OPACITY,
+        BORDER_WEIGHT,
+
+        COLOR_GRADIENTS,
+        COLOR_GRADIENTS_RANGE,
+        COLOR_GRADIENTS_DEFAULT,
+        COLOR_GRADIENTS_RANGE_DEFAULT,
+
         GRID,
-        GRID_LEVEL,
+        CURRENT_GRID_LEVEL,
         BOUNDS,
-        CONTENT_TABLE,
         APP_STATE,
+
+        HTTP_REQUEST_TIMEOUT,
+        EXPORT_TIMEOUT,
+        EXPORT_STATUS_TIMEOUT,
+        DOWNLOAD_FORMAT,
+
+        LIVE_MODE_ENABLED,
         GEOJSON_ARRAY,
         HISTORICAL_SNAPSHOT_AMOUNT,
-        LIVE_MODE_ENABLED,
-        GRID_LEVEL,
         LEAFLET_ZOOM_TO_GRID_LEVEL_ARRAY,
 
+        CONTENT_TABLE,
+        CURRENT_CONTENT_TABLE_ARRAY,
+        CONTENT_TABLE_SELECTED_IDENTIFIER,
         SENSORTYPES_ARRAY,
         EXPORTFORMATS_ARRAY,
         REFRESH_STATES_ARRAY,
 
-        COLOR_GRADIENTS,
-        COLOR_GRADIENTS_DEFAULT,
-        COLOR_GRADIENTS_RANGE,
-        COLOR_GRADIENTS_RANGE_DEFAULT,
-        FILL_COLOR_OPACITY,
-        BORDER_COLOR_OPACITY,
-        BORDER_WEIGHT,
-        EXPORT_TIMEOUT,
-        EXPORT_STATUS_TIMEOUT,
-        HTTP_REQUEST_TIMEOUT,
-        GRAFANA_URL,
-        DOWNLOAD_FORMAT
+        DEFAULT_LIVE_MODE_ENABLED,
+        DEFAULT_TIMEFRAME,
+        DEFAULT_LIVE_REFRESH_INTERVAL,
+        DEFAULT_HISTORICAL_REFRESH_INTERVAL,
+        DEFAULT_AUTOMATIC_REFRESH_ENABLED
     }
 });

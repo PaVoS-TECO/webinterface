@@ -6,6 +6,9 @@ require.config({
         'jasmine-html': '../vendors/jasmine/lib/jasmine-3.2.1/jasmine-html',
         'jasmine-boot': '../vendors/jasmine/lib/jasmine-3.2.1/boot',
 
+        'appState': '../resources/js/app/appState',
+        'appStateTest': '../tests/unit/app/appStateTest',
+
         'bounds': '../resources/js/grid/bounds',
         'boundsTest': '../tests/unit/grid/boundsTest',
         'cluster': '../resources/js/grid/cluster',
@@ -61,7 +64,8 @@ require.config({
 })
 
 require(['jasmine-boot'], function() {
-    require(['boundsTest', 'clusterTest', 'dimensionTest', 'gridTest', 'recursiveRectangleClusterTest', 'recursiveRectangleGridTest', 
+    require(['appStateTest',
+             'boundsTest', 'clusterTest', 'dimensionTest', 'gridTest', 'recursiveRectangleClusterTest', 'recursiveRectangleGridTest', 
              'colorTest', 'colorGradientTest', 'multiColorGradientTest', 
              'dateTimeTest', 'dynamicHtmlBuilderTest', 'gridUtilTest', 'leafletMapDemoTest', 'leafletUtilTest', 'mathUtilTest', 'parserTest', 'storageUtilTest', 'utcDateTimeTest', 'utilTest'], 
     function() {

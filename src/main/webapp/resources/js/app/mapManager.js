@@ -8,12 +8,10 @@ define(['appManager', 'parser', 'leafletUtil', 'leaflet'], function(AppManager, 
         layerArray = [];
         timestampArray = [];
         currentIndex = 0;
-        for (i = 0; i < geoJsonArray.length; i++) {
-            timestampArray.push(geoJsonArray[i]["timestamp"]);
-            console.log(timestampArray);
-            console.log("looped");
-            layerArray.push(LeafletUtil.createLayerFromGeoJson(JSON.parse(JSON.stringify(geoJsonArray[i])), this.applyColorGradient));
-        }
+        geoJsonArray.forEach(function(geoJson) {
+            timestampArray.push(geoJson["timestamp"]);
+            layerArray.push(LeafletUtil.createLayerFromGeoJson(geoJson, this.applyColorGradient));
+        });
     };
 
     displayLayer = function(index) {
@@ -71,11 +69,14 @@ define(['appManager', 'parser', 'leafletUtil', 'leaflet'], function(AppManager, 
             LeafletUtil.getStyle(
                 min,
                 max,
-                Number(feature['properties']['value']), 
+                feature['properties']['value'], 
                 gradient,
                 AppManager.FILL_COLOR_OPACITY, 
                 AppManager.BORDER_COLOR_OPACITY, 
-                AppManager.BORDER_WEIGHT));
+                AppManager.BORDER_WEIGHT,
+                AppManager.MAP_STYLE_EMPTY_CLUSTER
+            )
+        );
     };
 
     return {

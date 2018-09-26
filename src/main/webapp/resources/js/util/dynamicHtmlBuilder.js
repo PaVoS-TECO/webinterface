@@ -27,11 +27,13 @@ define(['jquery', 'util'], function($, Util) {
     };
 
     /**
-      * Generate table content out of a header array and a content array.
+      * Generate table content out of an header array and a onedimensional content array.
+      * Each entry is added next to the other while breaking into the next row, when the 
+      * last header column is reached.
       * 
       * @param {*} identifier the identifier of the table
       * @param {*} headerArray an array containing the headers of the table
-      * @param {*} contentArray an array containing the content of each row
+      * @param {*} contentArray an array containing the content of each cell
       */
     buildTableContentFromArray = function(identifier, headerArray, contentArray) {
         tableContent = this.formatTableRow(headerArray, '<th>', '</th>');
@@ -46,6 +48,27 @@ define(['jquery', 'util'], function($, Util) {
 
         $(identifier).append(tableContent);
     };
+
+    /**
+      * Generate table content out of an header array and a twodimensional content array.
+      * Each Entry inside the content array is an array itself and each entry is displayed
+      * next to each other in a row.
+      * 
+      * @param {*} identifier the identifier of the table
+      * @param {*} headerArray an array containing the headers of the table
+      * @param {*} contentArray an array containing the content of each row
+      */
+    buildTableContentFromNestedArray = function(identifier, headerArray, contentArray) {
+        $(identifier + " tr").remove(); 
+
+        tableContent = this.formatTableRow(headerArray, '<th>', '</th>');
+
+        for (row = 0; row < contentArray.length; row++) {
+            tableContent = tableContent + this.formatTableRow(contentArray[row], '<td>', '</td>');
+        }
+
+        $(identifier).append(tableContent);
+    }
 
     /**
       * Turns every key of the submitted json into a header (duplicates are removed) and builds 
@@ -116,6 +139,7 @@ define(['jquery', 'util'], function($, Util) {
     return {
         buildRadioButtonGroup,
         buildTableContentFromArray,
+        buildTableContentFromNestedArray,
         buildTableContentFromJson,
         buildListTableFromArray,
         formatTableRow

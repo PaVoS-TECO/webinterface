@@ -7,11 +7,7 @@ define(['cluster'], function(Cluster) {
         });
 
         describe("setters and getters", function() {
-            it("set", function() {
-
-            });
-
-            it("get", function() {
+            it("set and get cluster identifier", function() {
 
             });
         });

@@ -118,8 +118,8 @@ define(['dimension', 'leaflet'], function(Dimension) {
       * Returns these bounds formatted for leaflet.
       */
     Bounds.prototype.toLeafletMapBounds = function() {
-        var southWest = L.latLng(this.getLowerLeft()[0], this.getLowerLeft()[1]);
-        var northEast = L.latLng(this.getUpperRight()[0], this.getUpperRight()[1]);
+        var southWest = L.latLng(this.getLowerLeft()[1], this.getLowerLeft()[0]);
+        var northEast = L.latLng(this.getUpperRight()[1], this.getUpperRight()[0]);
         return L.latLngBounds(southWest, northEast);
     }
 

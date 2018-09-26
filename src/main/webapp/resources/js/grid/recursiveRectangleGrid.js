@@ -1,5 +1,5 @@
-define(['grid', 'recursiveRectangleCluster', 'bounds', 'dimension', 'mathUtil'],
-function(Grid, RecursiveRectangleCluster, Bounds, Dimension, MathUtil) {
+define(['grid', 'recursiveRectangleCluster', 'bounds', 'dimension', 'gridUtil', 'mathUtil'],
+function(Grid, RecursiveRectangleCluster, Bounds, Dimension, GridUtil, MathUtil) {
     /**
       * A regular grid, consisting of rectangle clusters with equal size.
       * 
@@ -27,15 +27,42 @@ function(Grid, RecursiveRectangleCluster, Bounds, Dimension, MathUtil) {
 
         var rowColumnArray = [];
         for (level = 1; level <= gridLevel; level++) {
-            var clusterDimension = this.calculateDimensionAtGridLevel(this.getBounds().getDimension(), this.getRows(), this.getColumns(), level);
+            var clusterDimension = GridUtil.calculateDimensionAtGridLevel(this.getBounds().getDimension(), this.getRows(), this.getColumns(), level);
             
-            var row = MathUtil.mod(Math.floor(this.calculateCoordinateRelativeToBounds(this.getBounds(), coordinate)[0] / clusterDimension.getWidth()), this.getRows());
-            var column = MathUtil.mod(Math.floor(this.calculateCoordinateRelativeToBounds(this.getBounds(), coordinate)[1] / clusterDimension.getHeight()), this.getColumns());
-
-            rowColumnArray.push([column, row]);
+            var row = MathUtil.mod(
+                Math.floor(
+                    GridUtil.calculateCoordinateRelativeToBounds(
+                        this.getBounds(), 
+                        coordinate
+                    )[1] / clusterDimension.getHeight()
+                ), 
+                this.getRows()
+            );
+            var column = MathUtil.mod(
+                Math.floor(
+                    GridUtil.calculateCoordinateRelativeToBounds(
+                        this.getBounds(), 
+                        coordinate
+                    )[0] / clusterDimension.getWidth()
+                ), 
+                this.getColumns()
+            );
+            
+            rowColumnArray.push([row, column]);
         }
 
-        return this.createRecursiveRectangleCluster(rowColumnArray);
+        var clusterID = GridUtil.createRecursiveRectangleClusterIDFromArray(
+            this.getGridID(), 
+            rowColumnArray
+        );
+        
+        return new RecursiveRectangleCluster(
+            clusterID,
+            GridUtil.calculateRecursiveRectangleClusterCoordinates(
+                this.getBounds(), 
+                clusterID
+            )
+        );  
     };
 
     /**
@@ -65,7 +92,24 @@ function(Grid, RecursiveRectangleCluster, Bounds, Dimension, MathUtil) {
         var clusterArray = [];
         for (rowOffset = 0; rowOffset <= (rowMax - rowMin); rowOffset++) {
             for (columnOffset = 0; columnOffset <= (columnMax - columnMin); columnOffset++) {
-                clusterArray.push(new RecursiveRectangleCluster(this.getGridID() + ":" + this.calculateClusterID((rowMin + rowOffset), (columnMin + columnOffset), gridLevel)));
+                var clusterID = GridUtil.createRecursiveRectangleClusterID(
+                    this.getGridID(), 
+                    this.getRows(), 
+                    this.getColumns(), 
+                    (rowMin + rowOffset), 
+                    (columnMin + columnOffset), 
+                    gridLevel
+                );
+                
+                clusterArray.push(
+                    new RecursiveRectangleCluster(
+                        clusterID,
+                        GridUtil.calculateRecursiveRectangleClusterCoordinates(
+                            this.getBounds(), 
+                            clusterID
+                        )
+                    )
+                );
             }
         }
         return clusterArray;
@@ -79,74 +123,28 @@ function(Grid, RecursiveRectangleCluster, Bounds, Dimension, MathUtil) {
     };
 
     /**
-     * Divides the submitted dimension into equal rectangles using the given rows and columns 
-     * per gridlevel and returns the dimension of the resulting object.
-     * 
-     * @param {*} dimension the dimension
-     * @param {*} rows the rows
-     * @param {*} columns the columns
-     * @param {*} gridLevel the gridLevel
-     */
-    RecursiveRectangleGrid.prototype.calculateDimensionAtGridLevel = function(dimension, rows, columns, gridLevel) {
-        width = (dimension.getWidth()) / Math.pow(rows, gridLevel);
-        height = (dimension.getHeight()) / Math.pow(columns, gridLevel);
-        return new Dimension(width, height);
-    };
-
-    /**
-     * Calculate what the coordinates values would be if the bounds lower left corner was the point (0, 0).
-     * 
-     * @param {*} bounds the bounds
-     * @param {*} coordinate the coordinate
-     */
-    RecursiveRectangleGrid.prototype.calculateCoordinateRelativeToBounds = function(bounds, coordinate) {
-        return [(coordinate[0] - bounds.getLowerLeft()[0]), (coordinate[1] - bounds.getLowerLeft()[1])];
-    };
-
-    /**
-      * Create the recursive rectangle cluster with the given row column array.
+      * Returns whether the submitted is a valid cluster identifier
       * 
-      * @param {*} rowColumnArray the row column array
+      * @param {*} input the input
       */
-    RecursiveRectangleGrid.prototype.createRecursiveRectangleCluster = function(rowColumnArray) {
-        var clusterID = this.getGridID() + ":";
-
-        for (i = 0; i < rowColumnArray.length; i++) {
-            clusterID = clusterID + rowColumnArray[i][0] + "_" + rowColumnArray[i][1];
-            if (i < (rowColumnArray.length - 1)) {
-                clusterID = clusterID + "-";
-            }
+    RecursiveRectangleGrid.prototype.isValidClusterID = function(input) {
+        var regex = new RegExp(
+            this.getGridID()
+            + ":"
+              + "[0-" + (this.getRows() - 1) + "]" + "_" + "[0-" + (this.getColumns() - 1) + "]"
+            + "("
+              + "-[0-" + (this.getRows() - 1) + "]" + "_" + "[0-" + (this.getColumns() - 1) + "]"
+            + ")"
+            + "{0," +  (this.getGridLevels() - 1) + "}"
+        );
+        
+        var match = input.match(regex);
+        if ((match != null) && (match[0] == input)) {
+            return true;
+        } else {
+            return false;
         }
-
-        return new RecursiveRectangleCluster(clusterID);
-    };
-
-    /**
-      * Calculate the cluster id with the given row and column and the submitted grid level.
-      * 
-      * @param {*} rowOfGridLevel the row of the submitted grid level
-      * @param {*} columnOfGridLevel the column of the submitted grid level
-      * @param {*} gridLevel the grid level
-      */
-    RecursiveRectangleGrid.prototype.calculateClusterID = function(rowOfGridLevel, columnOfGridLevel, gridLevel) {
-        clusterID = "";
-
-        for (level = 1; level <= gridLevel; level++) {
-            if (level < gridLevel) {
-                clusterID = clusterID 
-                    + MathUtil.mod(Math.floor(rowOfGridLevel / Math.pow(this.getRows(), (gridLevel - level))), this.getRows())
-                    + "_" 
-                    + MathUtil.mod(Math.floor(columnOfGridLevel / Math.pow(this.getColumns(), (gridLevel - level))), this.getColumns())
-                    + "-";
-            } else {
-                clusterID = clusterID 
-                    + (MathUtil.mod(rowOfGridLevel, this.getRows()))
-                    + "_" 
-                    + (MathUtil.mod(columnOfGridLevel, this.getColumns()));
-            }
-        }
-        return clusterID;
-    };
+    }
 
     return RecursiveRectangleGrid;
 });

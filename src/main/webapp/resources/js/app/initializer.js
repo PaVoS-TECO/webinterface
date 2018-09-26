@@ -1,19 +1,19 @@
-define(['jquery', 'app', 'appManager', 'appState', 'mapManager', 'fetchRoutine', 'exportRoutine',
+define(['jquery', 'appManager', 'appState', 'mapManager', 'fetchRoutine', 'exportRoutine', 'sensorReportRoutine',
         'recursiveRectangleGrid','recursiveRectangleCluster', 'bounds', 'dynamicHtmlBuilder', 
-        'utcDateTime', 'leafletUtil', 'mathUtil', 'storageUtil', 'requestor', 'mapManager', 
+        'utcDateTime', 'gridUtil', 'leafletUtil', 'mathUtil', 'storageUtil', 'tableUtil', 'util', 'requestor', 'mapManager', 
         'leaflet', 'bootstrapDatetimepicker', 'bootstrapTouchspin'],
-function($, App, AppManager, AppState, MapManager, FetchRoutine, ExportRoutine, RecursiveRectangleGrid, 
-         RecursiveRectangleCluster, Bounds, DynamicHtmlBuilder, UTCDateTime, LeafletUtil, 
-         MathUtil, StorageUtil, Requestor, MapManager) {
+function($, AppManager, AppState, MapManager, FetchRoutine, ExportRoutine, SensorReportRoutine, 
+         RecursiveRectangleGrid, RecursiveRectangleCluster, Bounds, DynamicHtmlBuilder, 
+         UTCDateTime, GridUtil, LeafletUtil, MathUtil, StorageUtil, TableUtil, Util, Requestor, MapManager) {
     var exportModalTemp;
     var favoritesModalTemp;
     var addFavoritesModalTemp;
     var timeSettingsModalTemp;
 
-    var startStopChecked;
-
     return {
         start: function(){
+            this.initGlobalVariables();
+
             exportModalTemp = AppManager.APP_STATE.clone();
             sensortypeModalTemp = AppManager.APP_STATE.clone();
             favoritesModalTemp = new AppState();
@@ -31,6 +31,21 @@ function($, App, AppManager, AppState, MapManager, FetchRoutine, ExportRoutine, 
             this.initTimestampSlider();
             this.initStartStopUpdateButtons();
             this.initTimeSettingsModal();
+            this.initWindow();
+        },
+
+        initGlobalVariables: function() {
+            AppManager.LIVE_MODE_ENABLED = AppManager.DEFAULT_LIVE_MODE_ENABLED;
+            AppManager.APP_STATE = new AppState(
+                undefined,
+                [],
+                AppManager.SENSORTYPES_ARRAY[0],
+                AppManager.EXPORTFORMATS_ARRAY[0],
+                AppManager.DEFAULT_TIMEFRAME,
+                AppManager.DEFAULT_LIVE_REFRESH_INTERVAL,
+                AppManager.DEFAULT_HISTORICAL_REFRESH_INTERVAL,
+                AppManager.DEFAULT_AUTOMATIC_REFRESH_ENABLED
+            );
         },
 
         initLeafletMap: function() {
@@ -39,28 +54,82 @@ function($, App, AppManager, AppState, MapManager, FetchRoutine, ExportRoutine, 
                 AppManager.BASEMAP_URL, AppManager.BASEMAP_ATTRIBUTION,
                 AppManager.MAP_BOUNDS,
                 AppManager.INITIAL_COORDINATES, AppManager.INITIAL_ZOOMLEVEL,
-                AppManager.IS_FULLSCREEN_AVAILABLE, AppManager.IS_MOUSE_COORDINATES_VISIBLE);
+                AppManager.IS_FULLSCREEN_AVAILABLE, AppManager.IS_MOUSE_COORDINATES_VISIBLE
+            );
 
+            AppManager.MAP_LAYER_HOVERED_OVER_CLUSTER = LeafletUtil.createLayer();
+            LeafletUtil.addLayer(AppManager.MAP, AppManager.MAP_LAYER_HOVERED_OVER_CLUSTER);
+            AppManager.MAP_LAYER_SELECTED_CLUSTERS = LeafletUtil.createLayer();
+            LeafletUtil.addLayer(AppManager.MAP, AppManager.MAP_LAYER_SELECTED_CLUSTERS);
+
+            AppManager.BOUNDS = this.calculateViewedMapBounds();
+            AppManager.CURRENT_GRID_LEVEL = this.calculateGridLevel();
+
+            var _this = this;
             LeafletUtil.initializeLeafletMap(
+                // The Leaflet map
                 AppManager.MAP,
-                function() {
-                    AppManager.MAP.panInsideBounds(AppManager.MAP_BOUNDS.toLeafletMapBounds(), { animate: false });
-                    
-                    var bounds = new Bounds();
-                    bounds.parseLeafletMapBounds(AppManager.MAP.getBounds());
-                    AppManager.BOUNDS = bounds;
+                // The function called by the mouseclick listener
+                function(e) {
+                    var cluster = AppManager.GRID.getClusterContainingCoordinate(
+                        LeafletUtil.convertLatLngToCoordinate(e.latlng), 
+                        AppManager.CURRENT_GRID_LEVEL
+                    );
 
-                    AppManager.GRID_LEVEL = (2 + MathUtil.indexOfValueInSortedArray(AppManager.LEAFLET_ZOOM_TO_GRID_LEVEL_ARRAY, AppManager.MAP.getZoom()));
+                    GridUtil.toggleClusterInClusterArray(
+                        AppManager.APP_STATE.getSelectedClusters(),
+                        cluster
+                    );
+
+                    LeafletUtil.togglePolygonsInLayerFromCoordinateArray(
+                        AppManager.MAP_LAYER_SELECTED_CLUSTERS,
+                        [
+                            cluster.getCoordinates()
+                        ],
+                        AppManager.MAP_STYLE_SELECTED_CLUSTERS
+                    );
                 },
-                function() {
-                    AppManager.MAP.panInsideBounds(AppManager.MAP_BOUNDS.toLeafletMapBounds(), { animate: false });
-                    
-                    var bounds = new Bounds();
-                    bounds.parseLeafletMapBounds(AppManager.MAP.getBounds());
-                    AppManager.BOUNDS = bounds;
+                // The function called by the mousemove listener
+                function(e) {
+                    var cluster = AppManager.GRID.getClusterContainingCoordinate(
+                        LeafletUtil.convertLatLngToCoordinate(e.latlng), 
+                        AppManager.CURRENT_GRID_LEVEL
+                    );
 
-                    AppManager.GRID_LEVEL = (2 + MathUtil.indexOfValueInSortedArray(AppManager.LEAFLET_ZOOM_TO_GRID_LEVEL_ARRAY, AppManager.MAP.getZoom()));
-                }
+                    LeafletUtil.updatePolygonsInLayerFromCoordinateArray(
+                        AppManager.MAP_LAYER_HOVERED_OVER_CLUSTER,
+                        [
+                            cluster.getCoordinates()
+                        ],
+                        AppManager.MAP_STYLE_HOVERED_OVER_CLUSTER
+                    );
+                },
+                // The function called by the mouseout listener
+                function() {
+                    LeafletUtil.resetLayer(AppManager.MAP_LAYER_HOVERED_OVER_CLUSTER);
+                },
+                // The function called by the zoomend listener
+                function() {
+                    AppManager.MAP.panInsideBounds(
+                        AppManager.MAP_BOUNDS.toLeafletMapBounds(), 
+                        { animate: false }
+                    );
+                    
+                    AppManager.BOUNDS = _this.calculateViewedMapBounds();
+
+                    AppManager.CURRENT_GRID_LEVEL = _this.calculateGridLevel();
+                },
+                // The function called by the dragend listener
+                function() {
+                    AppManager.MAP.panInsideBounds(
+                        AppManager.MAP_BOUNDS.toLeafletMapBounds(), 
+                        { animate: false }
+                    );
+                    
+                    AppManager.BOUNDS = _this.calculateViewedMapBounds();
+
+                    AppManager.CURRENT_GRID_LEVEL = _this.calculateGridLevel();
+                },
             );
         },
 
@@ -267,10 +336,60 @@ function($, App, AppManager, AppState, MapManager, FetchRoutine, ExportRoutine, 
         },
         
         initContentTable: function() {
-            DynamicHtmlBuilder.buildTableContentFromArray('#sensortable', AppManager.CONTENT_TABLE[0], AppManager.CONTENT_TABLE[1]);
+            DynamicHtmlBuilder.buildTableContentFromNestedArray(
+                '#contenttable', 
+                AppManager.CONTENT_TABLE[0], 
+                Util.fillNestedArray(AppManager.CONTENT_TABLE[1], "", 2)
+            );
 
-            $("#sensortable tr").click(function() {
-                // $(this).toggleClass('sensortable-tr-clicked');
+            TableUtil.addRowClickListener("#contenttable", TableUtil.handleContentTableClick);
+
+            $("#contenttableEntryModalSensorReportButton").click(function() {
+                var sensorID = AppManager.CONTENT_TABLE_SELECTED_IDENTIFIER;
+                var reason = $("#contenttableEntrySensorReportReasonInput").val();
+                
+                var sensorReportRoutine = new SensorReportRoutine(sensorID, reason);
+                sensorReportRoutine.run();
+
+                $("#contenttableEntryModal").modal('toggle');
+            });
+            
+            $("#contenttableEntryModalDisplayButton").click(function() {
+                if (AppManager.GRID.isValidClusterID(AppManager.CONTENT_TABLE_SELECTED_IDENTIFIER)) {
+                    if (AppManager.LIVE_MODE_ENABLED) {
+                        Requestor.requestLiveGraphForCluster(
+                            AppManager.GRID.getGridID(),
+                            AppManager.CONTENT_TABLE_SELECTED_IDENTIFIER,
+                            AppManager.APP_STATE.getSelectedSensortype()
+                        );
+                    } else {
+                        Requestor.requestHistoricalGraphForCluster(
+                            AppManager.APP_STATE.getSelectedTimeframe()[0],
+                            AppManager.APP_STATE.getSelectedTimeframe()[1],
+                            AppManager.GRID.getGridID(),
+                            AppManager.CONTENT_TABLE_SELECTED_IDENTIFIER,
+                            AppManager.APP_STATE.getSelectedSensortype()
+                        );
+                    }
+                } else {
+                    if (AppManager.LIVE_MODE_ENABLED) {
+                        Requestor.requestLiveGraphForSensor(
+                            AppManager.GRID.getGridID(),
+                            AppManager.CONTENT_TABLE_SELECTED_IDENTIFIER,
+                            AppManager.APP_STATE.getSelectedSensortype()
+                        );
+                    } else {
+                        Requestor.requestHistoricalGraphForSensor(
+                            AppManager.APP_STATE.getSelectedTimeframe()[0],
+                            AppManager.APP_STATE.getSelectedTimeframe()[1],
+                            AppManager.GRID.getGridID(),
+                            AppManager.CONTENT_TABLE_SELECTED_IDENTIFIER,
+                            AppManager.APP_STATE.getSelectedSensortype()
+                        );
+                    }
+                }
+
+                $("#contenttableEntryModal").modal('toggle');
             });
         },
 
@@ -283,7 +402,26 @@ function($, App, AppManager, AppState, MapManager, FetchRoutine, ExportRoutine, 
             });
 
             $('#timeStampSlider').on('change', function() {
-                MapManager.displayLayer(Number($('#timeStampSlider').val()) - 1);
+                var step = Number($('#timeStampSlider').val()) - 1;
+                MapManager.displayLayer(step);
+                
+                if (step < AppManager.CURRENT_CONTENT_TABLE_ARRAY.length) {
+                    AppManager.CONTENT_TABLE = [
+                        [
+                            "id", 
+                            AppManager.APP_STATE.getSelectedSensortype()
+                        ],
+                        AppManager.CURRENT_CONTENT_TABLE_ARRAY[step]
+                    ];
+    
+                    $('#contenttable tr').remove();
+                    DynamicHtmlBuilder.buildTableContentFromNestedArray(
+                        '#contenttable', 
+                        AppManager.CONTENT_TABLE[0], 
+                        Util.fillNestedArray(AppManager.CONTENT_TABLE[1], "", 2)
+                    );
+                    TableUtil.addRowClickListener("#contenttable", TableUtil.handleContentTableClick);
+                }
 
                 var popover = $('#timeStampSlider').data('bs.popover');
                 popover.options.content = MapManager.getCurrentTimestamp();
@@ -301,6 +439,15 @@ function($, App, AppManager, AppState, MapManager, FetchRoutine, ExportRoutine, 
         },
 
         initStartStopUpdateButtons: function() {
+            $('#liveHistoricalButton').prop('checked', AppManager.LIVE_MODE_ENABLED);
+            if (AppManager.LIVE_MODE_ENABLED) {
+                $('span', $('#liveHistoricalButton')).addClass('glyphicon-repeat');
+                $('span', $('#liveHistoricalButton')).removeClass('glyphicon-hourglass');
+            } else {
+                $('span', $('#liveHistoricalButton')).addClass('glyphicon-hourglass');
+                $('span', $('#liveHistoricalButton')).removeClass('glyphicon-repeat');
+            }
+
             /**
              * Encapsulates the state switch logic of starting and stopping the
              * current routine, as well as updating the current context.
@@ -317,7 +464,13 @@ function($, App, AppManager, AppState, MapManager, FetchRoutine, ExportRoutine, 
              */
             $('#liveHistoricalButton').click(function () {
                 AppManager.LIVE_MODE_ENABLED = !($('input', this).is(':checked'));
-                $('span', this).toggleClass('glyphicon-hourglass glyphicon-repeat');
+                if (AppManager.LIVE_MODE_ENABLED) {
+                    $('span', this).addClass('glyphicon-repeat');
+                    $('span', this).removeClass('glyphicon-hourglass');
+                } else {
+                    $('span', this).addClass('glyphicon-hourglass');
+                    $('span', this).removeClass('glyphicon-repeat');
+                }
             });
         },
 
@@ -404,5 +557,68 @@ function($, App, AppManager, AppState, MapManager, FetchRoutine, ExportRoutine, 
                 $('#timeSettingsModal').modal('toggle');
             });
         },
+
+        initWindow: function() {
+            this.resizeWindow();
+            var _this = this;
+            $(window).on('resize', function() {
+                _this.resizeWindow();
+            });
+        },
+
+        resizeWindow: function() {
+            var availableHeight = $(window).height() - $("#middleRow").height() - 10;
+            var upperRowHeight = availableHeight * 0.65;
+            var lowerRowHeight = availableHeight - upperRowHeight;
+
+            $("#mapContainer").height(upperRowHeight);
+            AppManager.MAP.invalidateSize();
+            $("#contenttableContainer").height(upperRowHeight - $("#upperOptionpanelContainer").height() - 8);
+            $("#graphContainer").height(lowerRowHeight);
+        },
+
+        calculateViewedMapBounds: function() {
+            var bounds = new Bounds();
+            bounds.parseLeafletMapBounds(AppManager.MAP.getBounds());
+            return bounds;
+        },
+
+        calculateGridLevel: function() {
+            return 2 + MathUtil.indexOfValueInSortedArray(
+                AppManager.LEAFLET_ZOOM_TO_GRID_LEVEL_ARRAY, 
+                AppManager.MAP.getZoom()
+            );
+        },
+
+        handleContentTableClick: function(tr) {
+            AppManager.CONTENT_TABLE_SELECTED_IDENTIFIER = tr.find('td').html();
+            if (AppManager.CONTENT_TABLE_SELECTED_IDENTIFIER != undefined) {
+                // The selected table row "tr" isn't a table header "th"
+                var modal = $("#contenttableEntryModal");
+                modal.find('.modal-header').html(
+                    '<h3 class="modal-title text-center">'
+                    + '<b>'
+                    + "Display or Report " + AppManager.CONTENT_TABLE_SELECTED_IDENTIFIER
+                    + '</b>'
+                    + '</h1>'
+                );
+
+                if (AppManager.GRID.isValidClusterID(AppManager.CONTENT_TABLE_SELECTED_IDENTIFIER)) {
+                    // The selected identifier is a cluster identifer
+                    
+                    // Disable report functionality
+                    $("#contenttableEntrySensorReportReasonInput").prop('disabled', true);
+                    $("#contenttableEntryModalSensorReportButton").prop('disabled', true);
+                } else {
+                    // The selected identifier is a sensor identifier
+
+                    // Enable report functionality
+                    $("#contenttableEntrySensorReportReasonInput").prop('disabled', false);
+                    $("#contenttableEntryModalSensorReportButton").prop('disabled', false);
+                }
+
+                modal.modal('toggle');
+            }
+        }
     }
 });

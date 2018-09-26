@@ -4,13 +4,21 @@ define(['requestor'], function(Requestor) {
     };
 
     GridIDFetchRoutine.prototype.run = function() {
-        Requestor.requestGridID(this.handleGridIDRequest.bind(this));
+        Requestor.requestGridID(
+            this.handleGridIDRequest.bind(this), 
+            this.handleGridIDRequestError.bind(this)
+        );
         console.log("START GridIDFetchRoutine");
     };
 
     GridIDFetchRoutine.prototype.handleGridIDRequest = function(response) {
         console.log("STOP GridIDFetchRoutine");
         this.callback(response);
+    };
+
+    GridIDFetchRoutine.prototype.handleGridIDRequestError = function() {
+        console.log("STOP GridIDFetchRoutine");
+        console.error("Grid Identifier couldn't be fetched");
     };
 
     return GridIDFetchRoutine;

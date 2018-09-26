@@ -14,14 +14,14 @@
 
 #mapContainer {
 	  width: 100%;
-	  height: var(--min-map-height);
+	  min-height: var(--min-map-height);
 	  margin: 0;
 	  padding: 0;
 }
 
 #upperOptionpanelContainer {
 	width: 100%;
-	height: var(--min-upper-optionpanel-height);
+	min-height: var(--min-upper-optionpanel-height); /* 125px */
 	margin: 0;
 	padding-top: 4px;
 	padding-bottom: 4px;
@@ -43,7 +43,7 @@
 	width: 95%;
 	margin-left: auto;
 	margin-right: auto;
-	max-height: var(--min-sensortable-height);
+	max-height: var(--min-contenttable-height);
 	overflow: auto;
 }
 
@@ -88,17 +88,17 @@
   background-color: yellow !important;
 }
 
-#sensortableContainer {
+#contenttableContainer {
 	width: 95%;
 	margin-left: auto;
-    margin-right: auto;
-	height: var(--min-sensortable-height);
+	margin-right: auto;
+	min-height: var(--min-contenttable-height); /* 225px */
 	overflow: auto;
 }
 
 #sliderContainer {
 	width: 100%;
-	height: var(--min-slider-height);
+	height: var(--min-middle-row-height);
 	padding-top: 10px;
 	padding-bottom: 10px;
 	padding-left: 0;
@@ -110,7 +110,7 @@
 
 #middleOptionpanelContainer {
 	width: 95%;
-	height: var(--min-middle-optionpanel-height);
+	height: var(--min-middle-row-height);
 	margin: 0 auto;
 	padding: 0;
 	display: flex;
@@ -119,7 +119,7 @@
 
 #graphContainer {
 	width: 100%;
-	height: var(--min-graph-height);
+	min-height: var(--min-graph-height);
 	margin: 0;
 	padding: 0;
 }
@@ -161,44 +161,44 @@
 	width: 20%;
 }
 
-#sensortable {
+#contenttable {
     width: 100%;
 	height: 100%;
 }
 
-#sensortable th, td {
+#contenttable th, td {
 	text-align: center;
     border-bottom: 1px solid var(--darkgreen);
 }
 
-#sensortable th {
+#contenttable th {
 	padding: 10px;
 	background-color: var(--darkgreen);
 	color: white;
 }
 
-#sensortable td {
+#contenttable td {
 	padding: 1px;
 }
 
-#sensortable tr {
+#contenttable tr {
 	color: var(--darkgreen);
 	-webkit-transition-duration: 0.4s; /* Safari */
     transition-duration: 0.4s;
 }
 
-#sensortable tr:hover {
+#contenttable tr:hover {
 	background-color: var(--green);
 	color: white;
 	box-shadow: 1px 1px 4px var(--lightgreen);
 }
 
-.sensortable-tr-clicked {
+.contenttable-tr-clicked {
   background-color: var(--limegreen) !important;
   color: black !important;
 }
 
-.sensortable-tr-clicked:hover {
+.contenttable-tr-clicked:hover {
   background-color: yellow !important;
 }
   

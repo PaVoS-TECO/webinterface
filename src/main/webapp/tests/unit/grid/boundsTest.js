@@ -6,7 +6,7 @@ define(['bounds', 'dimension'], function(Bounds, Dimension) {
             });
         });
 
-        describe("methods", function() {
+        describe("setters and getters", function() {
             it("get min x", function() {
 
             });
@@ -22,7 +22,9 @@ define(['bounds', 'dimension'], function(Bounds, Dimension) {
             it("get max y", function() {
 
             });
+        });
 
+        describe("methods", function() {
             it("get lower left", function() {
 
             });

@@ -4,7 +4,10 @@ define(['requestor', 'parser'], function(Requestor, Parser) {
     };
 
     ExportFormatFetchRoutine.prototype.run = function() {
-        Requestor.requestExportFormats(this.handleExportFormatRequest.bind(this));
+        Requestor.requestExportFormats(
+            this.handleExportFormatRequest.bind(this), 
+            this.handleExportFormatRequestError.bind(this)
+        );
         console.log("START ExportFormatFetchRoutine");
     };
 
@@ -12,6 +15,11 @@ define(['requestor', 'parser'], function(Requestor, Parser) {
         console.log("STOP ExportFormatFetchRoutine");
         this.callback(Parser.separatedToArray(response, ','));
     };
+
+    ExportFormatFetchRoutine.prototype.handleExportFormatRequestError = function() {
+        console.error("Export Formats couldn't be fetched");
+        console.log("STOP ExportFormatFetchRoutine");
+    }
 
     return ExportFormatFetchRoutine;
 })

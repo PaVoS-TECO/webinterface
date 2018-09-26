@@ -124,6 +124,21 @@ define(function() {
                 hash = hash & hash; // Convert to 32bit integer
             }
             return hash;
+        },
+
+        fillNestedArray: function(input, toFill, amount) {
+            var output = [];
+            for (i = 0; i < input.length; i++) {
+                output.push([]);
+                for (n = 0; n < amount; n++) {
+                    if (n < input[i].length) {
+                        output[i].push(input[i][n]);
+                    } else {
+                        output[i].push(toFill);
+                    }
+                }
+            }
+            return output;
         }
     }
 });

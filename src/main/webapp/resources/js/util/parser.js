@@ -1,4 +1,5 @@
-define(['bounds', 'color', 'multiColorGradient'], function(Bounds, Color, MultiColorGradient) {
+define(['bounds', 'color', 'multiColorGradient', 'recursiveRectangleGrid'],
+function(Bounds, Color, MultiColorGradient, RecursiveRectangleGrid) {
     separatedToArray = function(input, separator) {
         var output = [];
         if ((input != undefined) && (input != null)) {
@@ -79,12 +80,62 @@ define(['bounds', 'color', 'multiColorGradient'], function(Bounds, Color, MultiC
         return output;
     }
 
+    /**
+     * Parses the submitted grid id and returns its corresponding grid object.
+     */
+    parseGridID = function(bounds, gridID) {
+        gridType = gridID.split('-')[0];
+        gridParameters = gridID.split('-')[1].split('_');
+
+        if (gridType == 'recursiveRectangleGrid') {
+            return new RecursiveRectangleGrid(bounds, gridParameters[0], gridParameters[1], gridParameters[2]);
+        }
+    };
+
+    parseGeoJsonArrayToContentTableArray = function(geoJsonArray) {
+        var tableContentArray = [];
+        var tableContent;
+        var identifierValueArray;
+        var contentArray;
+
+        geoJsonArray.forEach(function(geoJson) {
+            tableContent = [];
+            identifierValueArray = [];
+            contentArray = [];
+
+            var featureArray = geoJson["features"];
+            featureArray.forEach(function(feature) {
+                var identifier = feature["properties"]["clusterID"];
+                var value = feature["properties"]["value"];
+                identifierValueArray.push([identifier, value]);
+
+                array = feature["properties"]["content"];
+                for (contentIndex = 0; contentIndex < array.length; contentIndex++) {
+                    contentArray.push([array[contentIndex]]);
+                }
+            });
+
+            identifierValueArray.forEach(function(element) {
+                tableContent.push(element);
+            });
+            contentArray.forEach(function(element) {
+                tableContent.push(element);
+            });
+
+            tableContentArray.push(tableContent);
+        });
+
+        return tableContentArray;
+    }
+
     return {
         separatedToArray,
         arrayStringToArray,
         jsonStringToObject,
         parseJsonToBounds,
         colorGradientRangeJsonToGradientJson,
-        colorGradientRangeJsonToRangeJson
+        colorGradientRangeJsonToRangeJson,
+        parseGridID,
+        parseGeoJsonArrayToContentTableArray
     }
 })

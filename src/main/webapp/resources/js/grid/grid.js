@@ -119,5 +119,12 @@ define(['bounds', 'dimension'], function() {
         return [x, y];
     };
 
+    /**
+      * Returns whether the submitted is a valid cluster identifier
+      * 
+      * @param {*} input the input
+      */
+    Grid.prototype.isValidClusterID = function(input) { }
+
     return Grid;
 });
