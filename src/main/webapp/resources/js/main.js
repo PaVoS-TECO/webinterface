@@ -16,8 +16,9 @@ require.config({
         'appState': '../../resources/js/app/appState',
         'appManager': '../../resources/js/app/appManager',
         'initializer': '../../resources/js/app/initializer',
+        'fetchScheduler': '../../resources/js/app/fetchScheduler',
         'routine': '../../resources/js/app/routine',
-        'requestor': '../../resources/js/app/requestor',
+        'requestor': '../../tests/util/dummyRequestor',
         'requestHandler': '../../resources/js/app/requestHandler',
         'mapManager': '../../resources/js/app/mapManager',
 
@@ -33,6 +34,7 @@ require.config({
         'sensorTypeFetchRoutine': '../../resources/js/app/routine/sensorTypeFetchRoutine',
         'gridIDFetchRoutine': '../../resources/js/app/routine/gridIDFetchRoutine',
         'gridBoundsFetchRoutine': '../../resources/js/app/routine/gridBoundsFetchRoutine',
+        'loadAnimationRoutine': '../../resources/js/app/routine/loadAnimationRoutine',
 
         'grid': '../../resources/js/grid/grid',
         'recursiveRectangleGrid': '../../resources/js/grid/recursiveRectangleGrid',
@@ -51,7 +53,7 @@ require.config({
         'utcDateTime': '../../resources/js/util/utcDateTime',
         'leafletUtil': '../../resources/js/util/leafletUtil',
         'leafletMapDemo': '../../resources/js/util/leafletMapDemo',
-        'geoJsonUtil': '../../resources/js/util/geoJsonUtil',
+        'geoJsonBuilder': '../../resources/js/util/geoJsonBuilder',
         'gridUtil': '../../resources/js/util/gridUtil',
         'storageUtil': '../../resources/js/util/storageUtil',
         'mathUtil': '../../resources/js/util/mathUtil',
@@ -97,7 +99,7 @@ require(['initializationRoutine', 'fetchRoutine',
          'loadingOverlay'], 
          function(InitializationRoutine, FetchRoutine) {
 
-    var initRoutine = new InitializationRoutine(FetchRoutine.run);
+    var initRoutine = new InitializationRoutine();
     initRoutine.run();
 
 });

@@ -18,7 +18,7 @@ define(function() {
       * @param {*} hex the hex
       */
     Color.prototype.setHex = function(hex) {
-        if (String(hex).match('#([0-9a-f]{6})') == null) {
+        if (String(hex).match('#([0-9a-fA-F]{6})') == null) {
             throw new Error('Invalid hexadecimal color');
         }
 

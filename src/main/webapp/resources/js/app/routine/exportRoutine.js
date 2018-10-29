@@ -55,6 +55,7 @@ define(['requestor', 'util'], function(Requestor, Util) {
             + this.clusters
             + "' couldn't be requested"
         );
+        Requestor.stopLoadAnimation();
     };
 
     ExportRoutine.prototype.handleExportStatusRequest = function(response) {
@@ -67,14 +68,15 @@ define(['requestor', 'util'], function(Requestor, Util) {
                 this.clusters
             );
         } else if (Util.replaceAll(response, '\n', '') == 'false') {
+            var _this = this;
             this.statusRequestTimeout = setTimeout(function() {
                 Requestor.requestExportStatus(
-                    this.extension,
-                    this.timeframe,
-                    this.observedProperties, 
-                    this.clusters,
-                    this.handleExportStatusRequest.bind(this),
-                    this.handleExportStatusRequestError.bind(this)
+                    _this.extension,
+                    _this.timeframe,
+                    _this.observedProperties, 
+                    _this.clusters,
+                    _this.handleExportStatusRequest.bind(_this),
+                    _this.handleExportStatusRequestError.bind(_this)
                 );
             }, this.repeatStatusRequestAfter);
         } else if (Util.replaceAll(response, '\n', '') == 'noID') {

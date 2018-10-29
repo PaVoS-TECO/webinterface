@@ -120,6 +120,13 @@ define(['bounds', 'dimension'], function() {
     };
 
     /**
+      * Returns the identifiers of the sub clusters of the submitted cluster.
+      * 
+      * @param {*} cluster the cluster
+      */
+    Grid.prototype.getSubClusterIDs = function(cluster) { }
+
+    /**
       * Returns whether the submitted is a valid cluster identifier
       * 
       * @param {*} input the input

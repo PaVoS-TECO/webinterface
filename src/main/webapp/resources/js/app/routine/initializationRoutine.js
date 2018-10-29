@@ -3,13 +3,12 @@ define(['jquery', 'appManager', 'initializer', 'gridBoundsFetchRoutine', 'gridID
         'bounds', 'parser'],
 function($, AppManager, Initializer, GridBoundsFetchRoutine, GridIDFetchRoutine, ExportFormatFetchRoutine, 
          SensorTypeFetchRoutine, ColorGradientFetchRoutine, Grid, Bounds, Parser) {
-    function InitializationRoutine(callback) {
+    function InitializationRoutine() {
         this.gridBoundsFetched = false;
         this.gridIDFetched = false;
         this.exportFormatFetched = false;
         this.sensorTypeFetched = false;
         this.colorGradientFetched = false;
-        this.callback = callback;
     };
 
     InitializationRoutine.prototype.run = function() {
@@ -82,7 +81,6 @@ function($, AppManager, Initializer, GridBoundsFetchRoutine, GridIDFetchRoutine,
             var _this = this;
             $(document).ready(function() {
                 Initializer.start();
-                _this.callback();
             });
         }
     };

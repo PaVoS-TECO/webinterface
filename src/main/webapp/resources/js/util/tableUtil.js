@@ -35,6 +35,21 @@ define(['jquery', 'appManager'], function($, AppManager) {
 
                 modal.modal('toggle');
             }
+        },
+
+        getValueFromIdentifier: function(contentTable, identifier) {
+            var array = contentTable[1];
+
+            for (i = 0; i < array.length; i++) {
+                if ((array[i] != undefined) 
+                    && (identifier == array[i][0])) {
+
+                    return array[i][1];
+
+                }
+            }
+
+            return "No Value Yet";
         }
     }
 });

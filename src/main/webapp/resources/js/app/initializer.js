@@ -1,8 +1,8 @@
-define(['jquery', 'appManager', 'appState', 'mapManager', 'fetchRoutine', 'exportRoutine', 'sensorReportRoutine',
+define(['jquery', 'appManager', 'appState', 'mapManager', 'fetchScheduler', 'fetchRoutine', 'exportRoutine', 'sensorReportRoutine',
         'recursiveRectangleGrid','recursiveRectangleCluster', 'bounds', 'dynamicHtmlBuilder', 
         'utcDateTime', 'gridUtil', 'leafletUtil', 'mathUtil', 'storageUtil', 'tableUtil', 'util', 'requestor', 'mapManager', 
         'leaflet', 'bootstrapDatetimepicker', 'bootstrapTouchspin'],
-function($, AppManager, AppState, MapManager, FetchRoutine, ExportRoutine, SensorReportRoutine, 
+function($, AppManager, AppState, MapManager, FetchScheduler, FetchRoutine, ExportRoutine, SensorReportRoutine, 
          RecursiveRectangleGrid, RecursiveRectangleCluster, Bounds, DynamicHtmlBuilder, 
          UTCDateTime, GridUtil, LeafletUtil, MathUtil, StorageUtil, TableUtil, Util, Requestor, MapManager) {
     var exportModalTemp;
@@ -32,6 +32,7 @@ function($, AppManager, AppState, MapManager, FetchRoutine, ExportRoutine, Senso
             this.initStartStopUpdateButtons();
             this.initTimeSettingsModal();
             this.initWindow();
+            this.initScheduler();
         },
 
         initGlobalVariables: function() {
@@ -103,15 +104,55 @@ function($, AppManager, AppState, MapManager, FetchRoutine, ExportRoutine, Senso
                         ],
                         AppManager.MAP_STYLE_HOVERED_OVER_CLUSTER
                     );
+
+                    if ((AppManager.MAP_HOVERED_OVER_CLUSTER == undefined)
+                        || (AppManager.MAP_HOVERED_OVER_CLUSTER.getClusterID() != cluster.getClusterID())) {
+                        
+                        AppManager.MAP_HOVERED_OVER_CLUSTER = cluster;
+
+                        AppManager.MAP.closePopup(
+                            AppManager.MAP_HOVERED_OVER_CLUSTER_POPUP
+                        );
+                        AppManager.MAP_HOVERED_OVER_CLUSTER_POPUP = L.popup(
+                            {
+                                maxWidth: 200, 
+                                autoPan: false
+                            }
+                        )
+                        .setLatLng(
+                            LeafletUtil.convertCoordinateToLatLng(
+                                MathUtil.calculateCentroid(
+                                    AppManager.MAP_HOVERED_OVER_CLUSTER.getCoordinates()
+                                )
+                            )
+                        )
+                        .setContent(
+                            "<h6><b>"
+                            + AppManager.MAP_HOVERED_OVER_CLUSTER.getClusterID()
+                            + "</b><br>"
+                            + TableUtil.getValueFromIdentifier(
+                                AppManager.CONTENT_TABLE, 
+                                AppManager.MAP_HOVERED_OVER_CLUSTER.getClusterID()
+                            )
+                            + "</h6>"
+                        )
+
+                        AppManager.MAP.openPopup(
+                            AppManager.MAP_HOVERED_OVER_CLUSTER_POPUP
+                        );
+
+                    }
                 },
                 // The function called by the mouseout listener
                 function() {
                     LeafletUtil.resetLayer(AppManager.MAP_LAYER_HOVERED_OVER_CLUSTER);
+                    AppManager.MAP_HOVERED_OVER_CLUSTER = null;
+                    AppManager.MAP.closePopup(AppManager.MAP_HOVERED_OVER_CLUSTER_POPUP);
                 },
                 // The function called by the zoomend listener
                 function() {
                     AppManager.MAP.panInsideBounds(
-                        AppManager.MAP_BOUNDS.toLeafletMapBounds(), 
+                        AppManager.MAP_BOUNDS.toLeafletMapBounds(),
                         { animate: false }
                     );
                     
@@ -131,6 +172,8 @@ function($, AppManager, AppState, MapManager, FetchRoutine, ExportRoutine, Senso
                     AppManager.CURRENT_GRID_LEVEL = _this.calculateGridLevel();
                 },
             );
+
+            this.updateLegend();
         },
 
         initExportModal: function() {
@@ -251,9 +294,11 @@ function($, AppManager, AppState, MapManager, FetchRoutine, ExportRoutine, Senso
                 sensortypeModalTemp.setSelectedSensortype(this.value);
             });
 
+            var _this = this;
             $('#sensortypeModalApplyButton').click(function() {
                 AppManager.APP_STATE.setSelectedSensortype(sensortypeModalTemp.getSelectedSensortype());
                 addFavoritesModalTemp.setSelectedSensortype(sensortypeModalTemp.getSelectedSensortype());
+                _this.updateLegend();
 
                 $('#sensortypeModal').modal('toggle');
             });
@@ -319,7 +364,7 @@ function($, AppManager, AppState, MapManager, FetchRoutine, ExportRoutine, Senso
         },
 
         initAddFavoriteModal: function() {
-            $("#addFavoriteModal").on('shown.bs.modal', function(){
+            $("#addFavoriteModal").on('shown.bs.modal', function() {
                 $('#yourFavoriteInput').val(addFavoritesModalTemp.toString());
             });
 
@@ -439,6 +484,8 @@ function($, AppManager, AppState, MapManager, FetchRoutine, ExportRoutine, Senso
         },
 
         initStartStopUpdateButtons: function() {
+            var _this = this;
+
             $('#liveHistoricalButton').prop('checked', AppManager.LIVE_MODE_ENABLED);
             if (AppManager.LIVE_MODE_ENABLED) {
                 $('span', $('#liveHistoricalButton')).addClass('glyphicon-repeat');
@@ -455,7 +502,19 @@ function($, AppManager, AppState, MapManager, FetchRoutine, ExportRoutine, Senso
             $('#startStopUpdateButton').click(function () {
                 // startStopChecked = $('input', this).is(':checked');
                 // $('span', this).toggleClass('glyphicon-play glyphicon-pause');
-                FetchRoutine.run();
+                var cooldown = AppManager.LIVE_MODE_ENABLED ? AppManager.APP_STATE.getSelectedLiveRefreshInterval() : AppManager.APP_STATE.getSelectedHistoricalRefreshInterval();
+              
+                FetchScheduler.setRequest(
+                    AppManager.LIVE_MODE_ENABLED, 
+                    cooldown, 
+                    AppManager.GRID.getGridID(), 
+                    AppManager.GRID.getClustersContainedInBounds(
+                        AppManager.BOUNDS,
+                        _this.calculateGridLevel()
+                    ), 
+                    AppManager.APP_STATE.getSelectedSensortype(), 
+                    AppManager.APP_STATE.getSelectedTimeframe()
+                );
             });
 
             /**
@@ -566,6 +625,10 @@ function($, AppManager, AppState, MapManager, FetchRoutine, ExportRoutine, Senso
             });
         },
 
+        initScheduler: function() {
+            FetchScheduler.start();
+        },
+
         resizeWindow: function() {
             var availableHeight = $(window).height() - $("#middleRow").height() - 10;
             var upperRowHeight = availableHeight * 0.65;
@@ -584,10 +647,63 @@ function($, AppManager, AppState, MapManager, FetchRoutine, ExportRoutine, Senso
         },
 
         calculateGridLevel: function() {
-            return 2 + MathUtil.indexOfValueInSortedArray(
-                AppManager.LEAFLET_ZOOM_TO_GRID_LEVEL_ARRAY, 
-                AppManager.MAP.getZoom()
-            );
+            var viewedMapBoundsDimension = this.calculateViewedMapBounds().getDimension();
+            
+            var dimensionPerGridLevel = [];
+            for (i = 1; i <= AppManager.GRID.getGridLevels(); i++) {
+                dimensionPerGridLevel.push(
+                    GridUtil.calculateDimensionAtGridLevel(
+                        AppManager.MAP_BOUNDS.getDimension(), 
+                        AppManager.GRID.getRows(), 
+                        AppManager.GRID.getColumns(), 
+                        i
+                    )
+                );
+            }
+
+            var gridLevel;
+            for (i = 0; i < AppManager.GRID.getGridLevels(); i++) {
+                gridLevel = i + 1;
+                var dimension = dimensionPerGridLevel[i];
+
+                var visibleRows = (viewedMapBoundsDimension.getHeight() / dimension.getHeight());
+                var visibleColumns = (viewedMapBoundsDimension.getWidth() / dimension.getWidth());
+
+                if ((visibleRows * visibleColumns) >= AppManager.MIN_VISIBLE_CLUSTERS) {
+                    break;
+                }
+            }
+
+            return gridLevel;
+        },
+
+        updateLegend: function() {
+            var rangeColorArray;
+            /* If the selected sensortype already has a color gradient defined display it in the legend, otherwise use the default color gradient */
+            if ((AppManager.COLOR_GRADIENTS[AppManager.APP_STATE.getSelectedSensortype()] != undefined)
+                && (AppManager.COLOR_GRADIENTS_RANGE[AppManager.APP_STATE.getSelectedSensortype()] != undefined)) {
+
+                rangeColorArray = Util.assignColorToRange(
+                    AppManager.COLOR_GRADIENTS_RANGE[AppManager.APP_STATE.getSelectedSensortype()], 
+                    AppManager.COLOR_GRADIENTS[AppManager.APP_STATE.getSelectedSensortype()].getColors(),
+                    AppManager.MAP_LEGEND_FRACTIONAL_PART
+                );
+
+            } else {
+
+                rangeColorArray = Util.assignColorToRange(
+                    AppManager.COLOR_GRADIENTS_RANGE_DEFAULT, 
+                    AppManager.COLOR_GRADIENTS_DEFAULT.getColors(),
+                    AppManager.MAP_LEGEND_FRACTIONAL_PART
+                );
+
+            }
+
+            if (AppManager.MAP_LEGEND != undefined) {
+                AppManager.MAP.removeControl(AppManager.MAP_LEGEND);
+            }
+            AppManager.MAP_LEGEND = LeafletUtil.createLegend(AppManager.MAP, rangeColorArray, AppManager.APP_STATE.getSelectedSensortype());
+            AppManager.MAP.addControl(AppManager.MAP_LEGEND);
         },
 
         handleContentTableClick: function(tr) {

@@ -1,4 +1,20 @@
-define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function($, AppManager, Util, GridUtil) {
+define(['jquery', 'appManager', 'bounds', 'recursiveRectangleGrid', 'gridUtil', 'mathUtil', 'util', 'geoJsonBuilder', 'gridUtil', 'utcDateTime', 'loadingOverlay'], 
+function($, AppManager, Bounds, RecursiveRectangleGrid, GridUtil, MathUtil, Util, GeoJsonBuilder, GridUtil, UTCDateTime) {
+    var GRID = new RecursiveRectangleGrid(new Bounds([-180, -85], [180, 85]), 3, 3, 8);
+    var SENSORTYPES = ["temperature_fahrenheit", "temperature_celsius", "pollution"];
+    var COLOR_RANGE_GRADIENTS = {
+        "temperature": {
+            "gradient": ["#FFFFFF", "#CB53AA", "#860083", "#1D008D", "#003FFF", "#26FEE6", "#FDFD00", "#FF1400", "#520002"],
+            "_fahrenheit": [-58.0, 86.0],
+            "_celsius": [-50.0, 30.0]
+        },
+        "pollution": {
+            "gradient": ["#00ff00", "#ffff00", "#ff0000"],
+            "": [0, 1]
+        }
+    };
+    var EXPORTFORMATS = ["csv", "json"];
+
     var EDMS_URL = 
         AppManager.SERVER_URL 
         + ':' 
@@ -20,115 +36,143 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
         + '/';
 
     requestGridBounds = function(callback, errorCallback) {
-        this.xmlHttpRequest(
-            "GET",
-            (CORE_URL
-                + 'getGridBounds?'),
-            true,
-            callback,
-            errorCallback
-        );
+        callback(JSON.stringify([GRID.getBounds().getLowerLeft(), GRID.getBounds().getUpperRight()]));
     };
 
     requestGridID = function(callback, errorCallback) {
-        this.xmlHttpRequest(
-            "GET",
-            (CORE_URL
-                + 'getGridID?'),
-            true,
-            callback,
-            errorCallback
-        );
+        callback(GRID.getGridID());
     };
 
     requestSensortypes = function(gridID, callback, errorCallback) {
-        this.xmlHttpRequest(
-            "GET",
-            (CORE_URL
-                + 'getObservationTypes?'
-                + this.formatParameters(['gridID'],
-                                        [gridID])),
-            true,
-            callback, 
-            errorCallback
-        );
+        callback(JSON.stringify(SENSORTYPES));
     };
 
     requestColorGradients = function(callback, errorCallback) {
-        this.xmlHttpRequest(
-            "GET",
-            (CORE_URL
-                + 'getAllGradients?'),
-            true,
-            callback, 
-            errorCallback
-        );
+        callback(JSON.stringify(COLOR_RANGE_GRADIENTS));
     };
 
     requestLiveClusterGeoJson = function(gridID, clusterArray, property, callback, errorCallback) {
-        var valueArray = [
-            gridID, 
-            Util.concat(GridUtil.clusterArrayToStringArray(clusterArray), ','),
-            property
-        ]
+        var currentdate = new Date();
+        var timestamp = new UTCDateTime(
+            currentdate.getFullYear(),
+            (currentdate.getMonth() + 1),
+            currentdate.getDate(),
+            currentdate.getHours(), 
+            currentdate.getMinutes(), 
+            currentdate.getSeconds()
+        ); 
 
-        this.xmlHttpRequest(
-            "GET",
-            (CORE_URL
-                + 'getGeoJsonCluster?'
-                + this.formatParameters(['gridID', 'clusterID', 'property'],
-                                        valueArray)),
-            true,
-            callback, 
-            errorCallback
+        var valueMin;
+        var valueMax;
+        if (AppManager.COLOR_GRADIENTS_RANGE[property] != undefined) {
+            valueMin = AppManager.COLOR_GRADIENTS_RANGE[property][0];
+            valueMax = AppManager.COLOR_GRADIENTS_RANGE[property][1];
+        } else {
+            valueMin = AppManager.COLOR_GRADIENTS_RANGE_DEFAULT[0];
+            valueMax = AppManager.COLOR_GRADIENTS_RANGE_DEFAULT[1];
+        }
+        
+        callback(
+            JSON.stringify(
+                GeoJsonBuilder.buildFromClusterArray(
+                    GRID, 
+                    clusterArray, 
+                    timestamp.toString(), 
+                    property, 
+                    valueMin,
+                    valueMax
+                )
+            )
         );
     };
 
     requestHistoricalClusterGeoJson = function(gridID, clusterArray, property, utcDateTimeArray, steps, callback, errorCallback) {
-        var valueArray = [
-            gridID, 
-            Util.concat(GridUtil.clusterArrayToStringArray(clusterArray), ','),
-            property,
-            Util.concat(utcDateTimeArray, ','),
-            steps
-        ]
-
-        this.xmlHttpRequest(
-            "GET",
-            (CORE_URL
-                + 'getGeoJsonCluster?'
-                + this.formatParameters(['gridID', 'clusterID', 'property', 'time', 'steps'],
-                                        valueArray)),
-            true,
-            callback, 
-            errorCallback
+        var currentdate = new Date();
+        var timestamp = new UTCDateTime(
+            currentdate.getFullYear(),
+            (currentdate.getMonth() + 1),
+            currentdate.getDate(),
+            currentdate.getHours(), 
+            currentdate.getMinutes(), 
+            currentdate.getSeconds()
+        ); 
+        
+        var valueMin;
+        var valueMax;
+        if (AppManager.COLOR_GRADIENTS_RANGE[property] != undefined) {
+            valueMin = AppManager.COLOR_GRADIENTS_RANGE[property][0];
+            valueMax = AppManager.COLOR_GRADIENTS_RANGE[property][1];
+        } else {
+            valueMin = AppManager.COLOR_GRADIENTS_RANGE_DEFAULT[0];
+            valueMax = AppManager.COLOR_GRADIENTS_RANGE_DEFAULT[1];
+        }
+        
+        callback(
+            JSON.stringify(
+                [
+                    GeoJsonBuilder.buildFromClusterArray(
+                        GRID, 
+                        clusterArray, 
+                        timestamp.toString(), 
+                        property, 
+                        valueMin,
+                        valueMax
+                    )
+                ]
+            )
         );
     };
 
     requestSensorGeoJson = function(gridID, sensorID, property, callback, errorCallback) {
-        this.xmlHttpRequest(
-            "GET",
-            (CORE_URL
-                + 'getGeoJsonSensor?'
-                + this.formatParameters(['gridID', 'sensorID', 'property'],
-                                        [gridID, sensorID, property])),
-            true,
-            callback, 
-            errorCallback
+        var currentdate = new Date();
+        var timestamp = new UTCDateTime(
+            currentdate.getFullYear(),
+            (currentdate.getMonth() + 1),
+            currentdate.getDate(),
+            currentdate.getHours(), 
+            currentdate.getMinutes(), 
+            currentdate.getSeconds()
+        ); 
+        
+        var valueMin;
+        var valueMax;
+        if (AppManager.COLOR_GRADIENTS_RANGE[property] != undefined) {
+            valueMin = AppManager.COLOR_GRADIENTS_RANGE[property][0];
+            valueMax = AppManager.COLOR_GRADIENTS_RANGE[property][1];
+        } else {
+            valueMin = AppManager.COLOR_GRADIENTS_RANGE_DEFAULT[0];
+            valueMax = AppManager.COLOR_GRADIENTS_RANGE_DEFAULT[1];
+        }
+
+        var value = MathUtil.randomInt(valueMin, valueMax);
+        var coordinates = [MathUtil.randomInt(-180, 180), MathUtil.randomInt(-90, 90)];
+
+        callback(
+            JSON.stringify(
+                { 
+                    "type": "FeatureCollection", 
+                    "timestamp": timestamp.toString(), 
+                    "observationType": property, 
+                    "features": [ 
+                        { 
+                            "type": "Feature", 
+                            "properties": { 
+                                "value": value, 
+                                "sensorID": sensorID
+                            }, 
+                            "geometry": { 
+                                "type": "Point", 
+                                "coordinates": coordinates
+                            } 
+                        }
+                    ] 
+                }
+            )
         );
     };
 
     requestSensorReport = function(sensorID, reason, callback, errorCallback) {
-        this.xmlHttpRequest(
-            "GET",
-            (CORE_URL
-                + 'reportSensor?'
-                + this.formatParameters(['sensorID', 'reason'],
-                                        [sensorID, reason])),
-            true,
-            callback, 
-            errorCallback
-        );
+        callback();
     };
 
     requestLiveGraphForSensor = function(gridID, sensorID, sensorType) {
@@ -231,110 +275,24 @@ define(['jquery', 'appManager', 'util', 'gridUtil', 'loadingOverlay'], function(
     }
 
     requestExportFormats = function(callback, errorCallback) {
-        this.xmlHttpRequest(
-            "GET",
-            (EDMS_URL
-                + 'edms/get?requestType=getExtensions'),
-            true,
-            callback, 
-            errorCallback
-        );
+        callback(EXPORTFORMATS);
     };
 
     requestExport = function(extension, timeframe, observedProperty, clusters, callback, errorCallback) {
-        var downloadID = Util.getHashCode(extension + timeframe + observedProperty + clusters);
-       
-        var array = [downloadID,
-                     extension, 
-                     Util.concat([timeframe[0].toString(), timeframe[1].toString()], ','),
-                     observedProperty,
-                     Util.concat(GridUtil.clusterArrayToStringArray(clusters), ',')];
-
-        this.xmlHttpRequest(
-            "GET",
-            (EDMS_URL
-                + 'edms/get?requestType=newExport&'
-                + this.formatParameters(['downloadID', 'extension', 'timeFrame', 'observedProperties', 'clusters'],
-                                        array)),
-            true,
-            callback, 
-            errorCallback
-        );
+        callback('started');
     };
 
     requestExportStatus = function(extension, timeframe, observedProperty, clusters, callback, errorCallback) {
-        var downloadID = Util.getHashCode(extension + timeframe + observedProperty + clusters);
-
-        this.xmlHttpRequest(
-            "GET",
-            (EDMS_URL
-                + 'edms/get?requestType=getStatus'
-                + '&downloadID='
-                + downloadID),
-            true,
-            callback, 
-            errorCallback
-        );
+        callback('true');
     };
 
     requestDownload = function(extension, timeframe, observedProperty, clusters) {
-        var downloadID = Util.getHashCode(extension + timeframe + observedProperty + clusters);
-
-        var requestUrl =
-            (EDMS_URL
-            + 'edms/get?requestType=tryDownload'
-            + '&downloadID='
-            + downloadID);
-
-        var xmlHttp = new XMLHttpRequest();
-        xmlHttp.open("GET", requestUrl);
-        xmlHttp.responseType = "blob";
-
-        var _this = this;
-        xmlHttp.onload = function () {
-            _this.saveData(this.response, (downloadID + '.' + AppManager.DOWNLOAD_FORMAT));
-        };
-        xmlHttp.timeout = AppManager.HTTP_REQUEST_TIMEOUT;
-        xmlHttp.ontimeout = function() {
-            xmlHttp.abort;
-            console.log("XMLHttpRequest Timeout >>>>> " + requestURL);
-        }
-        xmlHttp.onerror = function() {
-            xmlHttp.abort;
-            console.log("XMLHttpRequest Error >>>>> " + requestURL);
-        }
-        xmlHttp.send();
+        // var downloadID = Util.getHashCode(extension + timeframe + observedProperty + clusters);
+        // var response = "downloadTest";
+        // this.saveData(response, (downloadID + '.' + AppManager.DOWNLOAD_FORMAT));
     };
 
-    xmlHttpRequest = function(type, url, asynchronous, callback, errorCallback) {
-        var xmlHttp = new XMLHttpRequest();
-        console.log("XMLHttpRequest Pending >>> " + url);
-        xmlHttp.onreadystatechange = function() {
-            if (xmlHttp.readyState == 4) {
-                if (xmlHttp.status === 200) {
-                    console.log("XMLHttpRequest Success >>> " + url + " >>> " + xmlHttp.responseText);
-                    callback(xmlHttp.responseText);
-                } else if (xmlHttp.status >= 400) {
-                    xmlHttp.abort;
-                    console.error("XMLHttpRequest Error >>> " + url + " >>> " + xmlHttp.responseText);
-                    errorCallback();
-                }
-            }
-        }
-        xmlHttp.open(type, url, asynchronous);
-        xmlHttp.timeout = AppManager.HTTP_REQUEST_TIMEOUT;
-        xmlHttp.ontimeout = function() {
-            xmlHttp.abort;
-            console.error("XMLHttpRequest Timeout >>> " + url);
-            errorCallback();
-        }
-        xmlHttp.onerror = function() {
-            xmlHttp.abort;
-            console.error("XMLHttpRequest Error >>> " + url);
-            errorCallback();
-        }
-        xmlHttp.send();
-    };
+    xmlHttpRequest = function(type, url, asynchronous, callback, errorCallback) { };
 
     formatParameters = function(keyArray, valueArray) {
         var result = keyArray[0] + '=' + valueArray[0];

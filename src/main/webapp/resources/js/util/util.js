@@ -1,4 +1,4 @@
-define(function() {
+define(['mathUtil'], function(MathUtil) {
     return {
         /**
           * Returns whether the submitted array contains the given value or not.
@@ -139,6 +139,22 @@ define(function() {
                 }
             }
             return output;
+        },
+
+        assignColorToRange: function(range, colorArray, fractionalPart) {
+            var result = [];
+
+            var rangeForEachColor = (range[1] - range[0]) / (colorArray.length - 1);
+            for (i = 0; i < colorArray.length; i++) {
+                result.push(
+                    [
+                        MathUtil.cutoffDecimal((range[0] + (i * rangeForEachColor)), fractionalPart),
+                        colorArray[i]
+                    ]
+                );
+            }
+
+            return result;
         }
     }
 });

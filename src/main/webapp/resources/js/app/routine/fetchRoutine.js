@@ -3,28 +3,28 @@ function($, AppManager, MapManager, LiveClusterGeoJsonFetchRoutine, HistoricalCl
     var timer = null;
     var running = false;
 
-    run = function() {
+    run = function(liveMode, gridID, clusterArray, selectedSensortype, selectedTimeframe) {
         console.log("FetchRoutine.running = " + running);
         if (!running) {
             running = true;
             var clusterGeoJsonFetchRoutine;
 
-            if (AppManager.LIVE_MODE_ENABLED) {
+            if (liveMode) {
                 clusterGeoJsonFetchRoutine =
                     new LiveClusterGeoJsonFetchRoutine(
-                        AppManager.GRID.getGridID(),
-                        AppManager.GRID.getClustersContainedInBounds(AppManager.BOUNDS, AppManager.CURRENT_GRID_LEVEL),
-                        AppManager.APP_STATE.getSelectedSensortype(),
+                        gridID,
+                        clusterArray,
+                        selectedSensortype,
                         handleFetchResponse,
                         handleFetchResponseError
                     );
             } else {
                 clusterGeoJsonFetchRoutine = 
                     new HistoricalClusterGeoJsonFetchRoutine(
-                        AppManager.GRID.getGridID(),
-                        AppManager.GRID.getClustersContainedInBounds(AppManager.BOUNDS, AppManager.CURRENT_GRID_LEVEL),
-                        AppManager.APP_STATE.getSelectedSensortype(),
-                        AppManager.APP_STATE.getSelectedTimeframe(),
+                        gridID,
+                        clusterArray,
+                        selectedSensortype,
+                        selectedTimeframe,
                         AppManager.HISTORICAL_SNAPSHOT_AMOUNT,
                         handleFetchResponse,
                         handleFetchResponseError
@@ -71,27 +71,12 @@ function($, AppManager, MapManager, LiveClusterGeoJsonFetchRoutine, HistoricalCl
         running = false;
     }
 
-    start = function() {
-        // clearInterval(timer);
-        // if (AppManager.LIVE_MODE_ENABLED) {
-        //     timer = setInterval(function() {
-        //         this.run();
-        //     }, AppManager.APP_STATE.getSelectedLiveRefreshInterval());
-        // } else {
-        //     timer = setInterval(function() {
-
-        //     }, AppManager.APP_STATE.getSelectedHistoricalRefreshInterval());
-        // }
-    };
-
-    stop = function() {
-        clearInterval(timer);
-        timer = null;
-    };
+    isRunning = function() {
+        return this.running;
+    }
 
     return {
         run,
-        start,
-        stop
+        isRunning
     }
 })

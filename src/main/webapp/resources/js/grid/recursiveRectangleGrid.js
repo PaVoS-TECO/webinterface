@@ -115,6 +115,25 @@ function(Grid, RecursiveRectangleCluster, Bounds, Dimension, GridUtil, MathUtil)
         return clusterArray;
     }
 
+    RecursiveRectangleGrid.prototype.getSubClusterIDs = function(cluster) {
+        // Call this function in superclass
+        Grid.prototype.getSubClusterIDs.call(this);
+
+        var subClusterIDs = [];
+        for (row = 0; row < this.getRows(); row++) {
+            for (column = 0; column < this.getColumns(); column++) {
+                subClusterIDs.push(
+                    cluster.getClusterID() 
+                    + "-" 
+                    + row 
+                    + "_" 
+                    + column
+                );
+            }
+        }
+        return subClusterIDs;
+    };
+
     /**
       * Get the this grids identifier.
       */

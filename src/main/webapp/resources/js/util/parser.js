@@ -43,11 +43,12 @@ function(Bounds, Color, MultiColorGradient, RecursiveRectangleGrid) {
         return bounds;
     }
 
-    colorGradientRangeJsonToGradientJson =  function(input) {
+    colorGradientRangeJsonToGradientJson = function(input) {
         var output = {};
         var outerArray = Object.keys(input);
         var colorArray;
         var multiColorGradient;
+
         var innerArray;
         outerArray.forEach(function(outerElement) {
             colorArray = [];

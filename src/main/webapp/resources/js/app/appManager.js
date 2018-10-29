@@ -21,6 +21,8 @@ define(["appState", "color", "multiColorGradient", "bounds", "recursiveRectangle
 
     var MAP;
     var MAP_BOUNDS;
+    var MAP_LEGEND;
+    var MAP_LEGEND_FRACTIONAL_PART = 3;
     var MAP_STYLE_EMPTY_CLUSTER = {
         "fillColor": "#050505",
         "fillOpacity": 0.05,
@@ -44,6 +46,8 @@ define(["appState", "color", "multiColorGradient", "bounds", "recursiveRectangle
         "opacity": 0.25,
         "weight": 4
     };
+    var MAP_HOVERED_OVER_CLUSTER;
+    var MAP_HOVERED_OVER_CLUSTER_POPUP;
 
     var FILL_COLOR_OPACITY = 0.2;
     var BORDER_COLOR_OPACITY = 0.6;
@@ -62,8 +66,11 @@ define(["appState", "color", "multiColorGradient", "bounds", "recursiveRectangle
     var LIVE_MODE_ENABLED;
     var GEOJSON_ARRAY = [];
     var HISTORICAL_SNAPSHOT_AMOUNT = 10;
+    var MIN_VISIBLE_CLUSTERS = 9;
     var LEAFLET_ZOOM_TO_GRID_LEVEL_ARRAY = [3, 6];
 
+    var SCHEDULER_TIMEOUT = 1000;
+    var SCHEDULER_COOLDOWN_DEFAULT = 1000;
     var HTTP_REQUEST_TIMEOUT = 30000;
     var EXPORT_TIMEOUT = 10000;
     var EXPORT_STATUS_TIMEOUT = 500;
@@ -111,11 +118,15 @@ define(["appState", "color", "multiColorGradient", "bounds", "recursiveRectangle
 
         MAP,
         MAP_BOUNDS,
+        MAP_LEGEND,
+        MAP_LEGEND_FRACTIONAL_PART,
         MAP_STYLE_EMPTY_CLUSTER,
         MAP_LAYER_SELECTED_CLUSTERS,
         MAP_STYLE_SELECTED_CLUSTERS,
         MAP_LAYER_HOVERED_OVER_CLUSTER,
         MAP_STYLE_HOVERED_OVER_CLUSTER,
+        MAP_HOVERED_OVER_CLUSTER,
+        MAP_HOVERED_OVER_CLUSTER_POPUP,
 
         FILL_COLOR_OPACITY,
         BORDER_COLOR_OPACITY,
@@ -131,6 +142,8 @@ define(["appState", "color", "multiColorGradient", "bounds", "recursiveRectangle
         BOUNDS,
         APP_STATE,
 
+        SCHEDULER_TIMEOUT,
+        SCHEDULER_COOLDOWN_DEFAULT,
         HTTP_REQUEST_TIMEOUT,
         EXPORT_TIMEOUT,
         EXPORT_STATUS_TIMEOUT,
@@ -139,6 +152,7 @@ define(["appState", "color", "multiColorGradient", "bounds", "recursiveRectangle
         LIVE_MODE_ENABLED,
         GEOJSON_ARRAY,
         HISTORICAL_SNAPSHOT_AMOUNT,
+        MIN_VISIBLE_CLUSTERS,
         LEAFLET_ZOOM_TO_GRID_LEVEL_ARRAY,
 
         CONTENT_TABLE,

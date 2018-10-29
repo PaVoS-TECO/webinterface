@@ -337,9 +337,51 @@ define(['bounds', 'util', 'mathUtil', 'leaflet'], function(Bounds, Util, MathUti
         map.setView(coordinates, zoomLevel).addLayer(baseMap);
     };
 
+    createLegend = function(map, rangeColorArray, observationType) {
+        var legend = L.control({position: 'bottomleft'});
+
+        legend.onAdd = function (map) {
+
+            var ranges = [];
+            var colors = [];
+            for (i = 0; i < rangeColorArray.length; i++) {
+                var prefix;
+
+                if (i == 0) {
+                    prefix = "< ";
+                } else if (i == (rangeColorArray.length - 1)) {
+                    prefix = "> ";
+                } else {
+                    prefix = "";    
+                }
+
+                ranges.push(
+                    prefix + rangeColorArray[i][0]
+                );
+                colors.push(
+                    rangeColorArray[i][1]
+                );
+            }
+    
+            var div = L.DomUtil.create('div', 'info legend');
+            div.innerHTML += "<h6><b>" + observationType + "<b></h6>";
+
+            // loop through our density intervals and generate a label with a colored square for each interval
+            for (var i = (ranges.length - 1); i >= 0; i--) {
+                div.innerHTML +=
+                    '<i style="background:' + colors[i].getHex() + '"></i> ' +
+                    ranges[i] + '<br>';
+            }
+
+            return div;
+        };
+
+        return legend;
+    };
+
     addLayer = function(map, layer) {
         layer.addTo(map);
-    }
+    };
 
     // Used for function timeout to prevent excessive mousemove event handling
     var mousemoveListenerEnabled = true;
@@ -399,6 +441,7 @@ define(['bounds', 'util', 'mathUtil', 'leaflet'], function(Bounds, Util, MathUti
         getStyle,
         createLeafletMap,
         addBaseMap,
+        createLegend,
         addLayer,
         initializeLeafletMap
     };
